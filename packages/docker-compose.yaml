@@ -1,0 +1,38 @@
+version: '3.5'
+
+services:
+  api-db:
+    build: db/
+    container_name: cr-dev-db
+    networks:
+      - cr-dev
+    restart: always
+    ports:
+      - "5450:5432"
+    volumes:
+      - api-db:/data/db
+    environment:
+      - POSTGRES_USER=comet
+      - POSTGRES_PASSWORD=comet
+  api-test-db:
+    build: db/
+    container_name: cr-test-db
+    networks:
+      - cr-test
+    restart: always
+    ports:
+      - "5451:5432"
+    volumes:
+      - api-test-db:/data/db
+    environment:
+      - POSTGRES_USER=comet
+      - POSTGRES_PASSWORD=comet
+volumes:
+  api-db:
+    name: cr-api-dev
+  api-test-db:
+    name: cr-api-test
+
+networks:
+  cr-dev:
+  cr-test:

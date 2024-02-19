@@ -1,0 +1,22 @@
+import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { config } from '../utils/config';
+
+require('dotenv').config();
+
+const postgresConfig = config.getTyped('postgres');
+
+export const TypeOrmConfig: TypeOrmModuleOptions = {
+    type: 'postgres',
+    host: process.env.ECO_API_DB_HOST ?? postgresConfig.connection.host,
+    port: process.env.ECO_API_DB_PORT ? +process.env.ECO_API_DB_PORT : +postgresConfig.connection.port,
+    database: process.env.ECO_API_DB_NAME ?? postgresConfig.connection.database,
+    username: process.env.ECO_API_DB_USER ?? postgresConfig.connection.user,
+    password: process.env.ECO_API_DB_PASS ?? postgresConfig.connection.password,
+    entities: [
+        './dist/models/*.model.*',
+        '*/*/models/*.model.*',
+        `${process.cwd()}*/*/models/*.model.*`,
+        'dist/**/*.entity.js',
+    ],
+    migrationsRun: false,
+};
