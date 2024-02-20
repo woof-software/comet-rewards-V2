@@ -9,9 +9,9 @@ const config: DeepPartial<IConfigApp> = {
     connection: {
       host: 'localhost',
       port: 5450,
-      database: 'eco',
-      user: 'eco',
-      password: 'eco',
+      database: 'comet',
+      user: 'comet',
+      password: 'comet',
     },
     migrations: {
       directory: './database/migrations',

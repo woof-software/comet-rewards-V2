@@ -5,7 +5,11 @@ import { winstonTemplate } from './winston.template';
 import { WINSTON_LOGGER } from './keys';
 
 export const mainLogger = winston.createLogger({
-  format: winston.format.combine(winston.format.splat(), winston.format.simple(), winston.format.metadata()),
+  format: winston.format.combine(
+    winston.format.splat(),
+    winston.format.simple(),
+    winston.format.metadata(),
+  ),
   level: process.env.LOGGER_LEVEL,
   exitOnError: false,
   transports: [
@@ -14,7 +18,7 @@ export const mainLogger = winston.createLogger({
         winston.format.colorize({
           level: true,
         }),
-        winston.format.printf(winstonTemplate)
+        winston.format.printf(winstonTemplate),
       ),
     }),
   ],

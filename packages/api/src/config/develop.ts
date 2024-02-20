@@ -9,7 +9,7 @@ const config: DeepPartial<IConfigApp> = {
     connection: {
       host: 'localhost',
       port: 5450,
-      database: 'eco',
+      database: 'comet',
       user: 'comet',
       password: 'comet',
     },

@@ -8,7 +8,7 @@ services:
       - cr-dev
     restart: always
     ports:
-      - "5450:5432"
+      - '5450:5432'
     volumes:
       - api-db:/data/db
     environment:
@@ -21,7 +21,7 @@ services:
       - cr-test
     restart: always
     ports:
-      - "5451:5432"
+      - '5451:5432'
     volumes:
       - api-test-db:/data/db
     environment:
