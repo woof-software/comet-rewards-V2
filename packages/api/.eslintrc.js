@@ -3,7 +3,6 @@ const fs = require('fs');
 /**
  * Detect tsconfig file
  */
-// TODO: make config import common to all possible modules
 function getProjectFile() {
   if (fs.existsSync('./tsconfig.build.json')) return './tsconfig.build.json';
   if (fs.existsSync('./tsconfig.json')) return './tsconfig.json';
@@ -18,6 +17,9 @@ module.exports = {
     es6: true,
     node: true,
     'jest/globals': true,
+  },
+  globals: {
+    BigInt: true,
   },
   parserOptions: {
     sourceType: 'module',
