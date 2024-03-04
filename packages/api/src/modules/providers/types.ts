@@ -1,6 +1,5 @@
-import { JsonRpcProvider, WebSocketProvider } from 'ethers';
+import { Web3 } from 'web3';
 
 export interface IProvidersService {
-  getProviderRPC(): Promise<JsonRpcProvider>;
-  getProviderWSS(): Promise<WebSocketProvider>;
+  getProviderRPC(): Promise<Web3>;
 }

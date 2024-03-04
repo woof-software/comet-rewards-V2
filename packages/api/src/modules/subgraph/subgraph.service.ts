@@ -15,19 +15,21 @@ export class SubgraphService {
     this.logger = mainLogger.child({ scope: 'subgraph.service' });
   }
 
-  /*
-*
-* {
-              accounts(first: $first, skip: $skip, where: {positions_: {market: $market}}) {
-                id
-              }
-            }
-* */
-  async getAccounts(market: string, skip = 0, first = 1000): Promise<any> {
+  async getAccounts(
+    market: string,
+    blockNumber: number,
+    skip = 0,
+    first = 1000,
+  ): Promise<any> {
     return execute(
       `
             {
-              accounts(first: ${first}, skip: ${skip}, where: {positions_: {market: "${market}"}}) {
+              accounts(first: ${first}, skip: ${skip},
+              where: {
+                positions_: {market: "${market}"},
+                creationBlockNumber_lte: ${blockNumber}
+              })
+              {
                 id
               }
             }
@@ -36,17 +38,29 @@ export class SubgraphService {
     );
   }
 
-  async getMarketAccounting(market: string, first = 1, skip = 0) {
+  async getMarketAccounting(
+    market: string,
+    blockNumber: string,
+    first = 1,
+    skip = 0,
+  ) {
     return execute(
       `
             {
               marketAccountings(
                 orderBy: lastAccountingUpdatedBlockNumber,
-                first: ${first}, skip: ${skip}, where: {market_: {id: "${market}"}}
+                first: ${first}, skip: ${skip},
+                where: {
+                  market_: {id: "${market}"},
+                  lastAccountingUpdatedBlockNumber_lte: "${blockNumber}"
+                }
               ) {
                 lastAccountingUpdatedBlockNumber,
                 trackingSupplyIndex,
-                trackingBorrowIndex
+                trackingBorrowIndex,
+                baseSupplyIndex,
+                baseBorrowIndex,
+                lastAccrualTime,
               }
             }
         `,

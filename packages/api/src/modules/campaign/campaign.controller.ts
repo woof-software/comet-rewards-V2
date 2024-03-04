@@ -12,4 +12,9 @@ export class CampaignController {
   async startNew(@Body('market') market: string) {
     return this.campaignService.startNew(market);
   }
+
+  @Post('/test')
+  async test() {
+    return this.campaignService.test();
+  }
 }

@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Logger } from 'winston';
 import { WINSTON_LOGGER } from '../winston/keys';
 import { SubgraphService } from '../subgraph/subgraph.service';
-import { AccountDetails } from './account.types';
+import { AccountDetails, MarketAccount } from './account.types';
 
 @Injectable()
 export class AccountService {
@@ -17,7 +17,10 @@ export class AccountService {
     this.logger = mainLogger.child({ scope: 'account.service' });
   }
 
-  async collectAccounts(market: string): Promise<any> {
+  async getMarketAccounts(
+    market: string,
+    blockNumber: number,
+  ): Promise<MarketAccount[]> {
     const skip = 0;
     let accounts = [];
     // do {
@@ -26,7 +29,11 @@ export class AccountService {
     //     skip += 1000
     //     console.log(skip);
     // } while (accounts.length === skip);
-    const res = await this.subgraphService.getAccounts(market, skip);
+    const res = await this.subgraphService.getAccounts(
+      market,
+      blockNumber,
+      skip,
+    );
     accounts = accounts.concat(res.data.accounts);
     return accounts;
   }
@@ -37,7 +44,7 @@ export class AccountService {
    *
    * */
   calculateAccrued(
-    account: AccountDetails,
+    account: any,
     trackingSupplyIndex,
     trackingBorrowIndex,
     trackingIndexScale,

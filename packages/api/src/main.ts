@@ -1,4 +1,4 @@
-import 'source-map-support/register';
+// import 'source-map-support/register';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Logger } from 'winston';

@@ -6898,7 +6898,7 @@ export namespace CompoundTypes {
     | 'amountUsd';
 
   export type _ActiveAccount = {
-    /** Address + usecase specific metadata, this is just a helper for tracking overall usage */
+    /** Address + usecase specific metadata, this is just a helpers for tracking overall usage */
     id: Scalars['Bytes'];
   };
 

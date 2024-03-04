@@ -94490,7 +94490,7 @@ const schemaAST = {
           description: {
             kind: 'StringValue',
             value:
-              'Address + usecase specific metadata, this is just a helper for tracking overall usage',
+              'Address + usecase specific metadata, this is just a helpers for tracking overall usage',
             block: true,
           },
           name: {

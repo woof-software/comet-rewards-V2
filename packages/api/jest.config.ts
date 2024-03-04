@@ -1,6 +1,6 @@
 const { join } = require('path');
 
-module.exports = {
+const config = {
   rootDir: './',
   testRegex: '.test.ts$',
   coverageDirectory: join(__dirname, 'coverage'),
@@ -18,3 +18,4 @@ module.exports = {
   testEnvironment: 'node',
   testTimeout: 15000,
 };
+export default config;

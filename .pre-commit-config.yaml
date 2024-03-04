@@ -24,5 +24,5 @@ repos:
       - id: eslint
         files: \.[jt]sx?$  # *.js, *.jsx, *.ts and *.tsx
         types: [ file ]
-        args: ['--fix', '--config', 'packages/api/.eslintrc.js']
+        args: ['--fix', '--config', './.eslintrc.js']
 files: 'packages/'
