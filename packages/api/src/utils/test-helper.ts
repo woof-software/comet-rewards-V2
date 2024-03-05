@@ -1,5 +1,5 @@
+import 'source-map-support/register';
 import { Web3 } from 'web3';
-import * as process from 'process';
 
 require('dotenv').config();
 const knex = require('../database/knex');

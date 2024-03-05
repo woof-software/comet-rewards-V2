@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { FMT_BYTES, FMT_NUMBER } from 'web3-types';
-import { CampaignService } from '../campaign/campaign.service';
 import { AccountService } from './account.service';
 import { WinstonModule } from '../winston';
 import { SubgraphModule } from '../subgraph';

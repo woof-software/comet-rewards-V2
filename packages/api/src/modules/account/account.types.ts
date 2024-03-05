@@ -1,14 +1,10 @@
-export class MarketAccount {
+import { UserBasic, UserBasicStr } from '../contracts/contract.types';
+
+export interface Account {
   id: string;
 }
 
-export class MarketAccountExt extends MarketAccount {
-  accrued: string;
-}
+export interface AccountBasicStr extends Account, UserBasicStr {}
+export interface AccountBasic extends Account, UserBasic {}
 
-export interface AccountDetails {
-  id: string;
-  principal;
-  baseTrackingIndex;
-  baseTrackingAccrued;
-}
+export type AccountAccrued = [address: string, accrued: string];

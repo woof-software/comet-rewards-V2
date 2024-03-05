@@ -73,6 +73,7 @@ module.exports = {
     'no-bitwise': 'warn',
     camelcase: 'off',
     'no-promise-executor-return': 'warn',
+    'no-underscore-dangle': 'off',
 
     /* TypeScript rules */
     '@typescript-eslint/no-shadow': ['error'],
