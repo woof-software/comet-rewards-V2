@@ -1,10 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Logger } from 'winston';
+import BigNumber from 'bignumber.js';
 import { WINSTON_LOGGER } from '../../winston/keys';
 import {
   Account,
   AccountAccrued,
-  AccountBasic,
+  AccountBasicBN,
   AccountBasicStr,
 } from '../../account/account.types';
 import { CalculationService } from '../../calculations/calculation.service';
@@ -56,13 +57,15 @@ export class AccruedHelper {
 
       const accountsAccrued: AccountAccrued[] = [];
       for (let i = 0; i < accountsBasic.length; i += 1) {
-        const accountBasic: AccountBasic = {
+        const accountBasic: AccountBasicBN = {
           id: accountsBasic[i].id,
-          principal: BigInt(accountsBasic[i].principal),
-          baseTrackingAccrued: BigInt(accountsBasic[i].baseTrackingAccrued),
-          baseTrackingIndex: BigInt(accountsBasic[i].baseTrackingIndex),
-          assetsIn: BigInt(accountsBasic[i].assetsIn),
-          _reserved: BigInt(accountsBasic[i]._reserved),
+          principal: new BigNumber(accountsBasic[i].principal),
+          baseTrackingAccrued: new BigNumber(
+            accountsBasic[i].baseTrackingAccrued,
+          ),
+          baseTrackingIndex: new BigNumber(accountsBasic[i].baseTrackingIndex),
+          assetsIn: new BigNumber(accountsBasic[i].assetsIn),
+          _reserved: new BigNumber(accountsBasic[i]._reserved),
         };
         const accrued = this.calculationService.calculateAccrued(
           accountBasic,
@@ -72,7 +75,10 @@ export class AccruedHelper {
           coefficients.accrualDescaleFactor,
         );
 
-        accountsAccrued.push([accountBasic.id, accrued.toString()]);
+        accountsAccrued.push([
+          accountBasic.id,
+          accrued.integerValue(BigNumber.ROUND_DOWN).abs().toString(),
+        ]);
       }
 
       return accountsAccrued;
@@ -95,9 +101,8 @@ export class AccruedHelper {
         blockStart,
         timeStart,
       );
-    const trackingIndexScale = await this.cometContract.trackingIndexScale(
-      market,
-      blockStart,
+    const trackingIndexScale = new BigNumber(
+      await this.cometContract.trackingIndexScale(market, blockStart),
     );
 
     return {

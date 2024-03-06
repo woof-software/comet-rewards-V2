@@ -35,12 +35,10 @@ export class CometContract implements OnApplicationBootstrap {
     blockNumber: number,
   ): Promise<any> {
     const instance = this.getInstanceFor(market);
-    const res = await instance.methods.userBasic(address).call({}, blockNumber);
-    console.log();
-    return res;
+    return instance.methods.userBasic(address).call({}, blockNumber);
   }
 
-  async trackingIndexScale(market: string, blockNumber: number) {
+  async trackingIndexScale(market: string, blockNumber: number): Promise<any> {
     const instance = this.getInstanceFor(market);
     return instance.methods.trackingIndexScale().call({}, blockNumber);
   }

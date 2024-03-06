@@ -1,6 +1,8 @@
+import BigNumber from 'bignumber.js';
+
 export interface AccruedCoefficients {
-  trackingSupplyIndex: any;
-  trackingBorrowIndex: any;
-  trackingIndexScale: any;
-  accrualDescaleFactor: any;
+  trackingSupplyIndex: BigNumber;
+  trackingBorrowIndex: BigNumber;
+  trackingIndexScale: BigNumber;
+  accrualDescaleFactor: BigNumber;
 }
