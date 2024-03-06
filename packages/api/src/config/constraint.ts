@@ -26,4 +26,9 @@ export interface IConfigApp {
     maxOpenConnections: number;
     loadExtensions: string;
   };
+  processes: {
+    userBasic: {
+      maxInstances: number;
+    };
+  };
 }

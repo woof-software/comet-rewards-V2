@@ -23,6 +23,11 @@ const config: DeepPartial<IConfigApp> = {
     },
     maxOpenConnections: 5,
   },
+  processes: {
+    userBasic: {
+      maxInstances: 5,
+    },
+  },
 };
 
 module.exports = config;
