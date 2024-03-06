@@ -40,7 +40,7 @@ export class SubgraphService {
 
   async getMarketAccounting(
     market: string,
-    blockNumber: string,
+    blockNumber: string | number,
     first = 1,
     skip = 0,
   ) {

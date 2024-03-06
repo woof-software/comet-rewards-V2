@@ -1,9 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Logger } from 'winston';
+import BigNumber from 'bignumber.js';
 import { WINSTON_LOGGER } from '../winston/keys';
-import { baseScale, FACTOR_SCALE } from '../../common/constants';
+import { baseScale } from '../../common/constants';
 import { SubgraphService } from '../subgraph/subgraph.service';
 import { CometContract } from '../contracts/Comet.contract';
+import { AccountBasicBN } from '../account/account.types';
+import { IndexInfo } from './calculation.types';
 
 @Injectable()
 export class CalculationService {
@@ -21,25 +24,30 @@ export class CalculationService {
   }
 
   calculateAccrued(
-    account: any,
-    trackingSupplyIndex,
-    trackingBorrowIndex,
-    trackingIndexScale,
-    accrualDescaleFactor,
-  ) {
-    let { baseTrackingAccrued } = account;
-    if (account.principal >= 0) {
-      const indexDelta = trackingSupplyIndex - account.baseTrackingIndex;
-      baseTrackingAccrued +=
-        (account.principal * indexDelta) /
-        trackingIndexScale /
-        accrualDescaleFactor;
+    account: AccountBasicBN,
+    trackingSupplyIndex: BigNumber,
+    trackingBorrowIndex: BigNumber,
+    trackingIndexScale: BigNumber,
+    accrualDescaleFactor: BigNumber,
+  ): BigNumber {
+    let baseTrackingAccrued = new BigNumber(
+      account.baseTrackingAccrued.toString(),
+    );
+    if (account.principal.gte(0)) {
+      const indexDelta = trackingSupplyIndex.minus(account.baseTrackingIndex);
+      baseTrackingAccrued = baseTrackingAccrued.plus(
+        account.principal
+          .times(indexDelta)
+          .div(trackingIndexScale.div(accrualDescaleFactor)),
+      );
     } else {
-      const indexDelta = trackingBorrowIndex - account.baseTrackingIndex;
-      baseTrackingAccrued +=
-        (-account.principal * indexDelta) /
-        trackingIndexScale /
-        accrualDescaleFactor;
+      const indexDelta = trackingBorrowIndex.minus(account.baseTrackingIndex);
+      baseTrackingAccrued = baseTrackingAccrued.plus(
+        account.principal
+          .negated()
+          .times(indexDelta)
+          .div(trackingIndexScale.div(accrualDescaleFactor)),
+      );
     }
 
     return baseTrackingAccrued;
@@ -47,75 +55,32 @@ export class CalculationService {
 
   async getTrackingInfoInitial(
     market: string,
-    blockNumber: string,
-  ): Promise<any> {
+    blockNumber: string | number,
+  ): Promise<IndexInfo> {
     const marketAccounting = await this.subgraphService.getMarketAccounting(
       market,
       blockNumber,
     );
     return {
-      trackingSupplyIndex: BigInt(
+      trackingSupplyIndex: new BigNumber(
         marketAccounting.data.marketAccountings[0].trackingSupplyIndex,
       ),
-      trackingBorrowIndex: BigInt(
+      trackingBorrowIndex: new BigNumber(
         marketAccounting.data.marketAccountings[0].trackingBorrowIndex,
       ),
-      baseSupplyIndex: BigInt(
+      baseSupplyIndex: new BigNumber(
         marketAccounting.data.marketAccountings[0].baseSupplyIndex,
       ),
-      baseBorrowIndex: BigInt(
+      baseBorrowIndex: new BigNumber(
         marketAccounting.data.marketAccountings[0].baseBorrowIndex,
       ),
       lastAccrualTime:
-        marketAccounting.data.marketAccountings[0].lastAccrualTime,
+        +marketAccounting.data.marketAccountings[0].lastAccrualTime,
     };
   }
 
-  async calculateAccruedInterestIndices(
-    market: string,
-    blockNumber: string,
-    timeElapsed: string,
-    baseSupplyIndex,
-    baseBorrowIndex,
-  ) {
-    let baseSupplyIndex_ = baseSupplyIndex;
-    let baseBorrowIndex_ = baseBorrowIndex;
-    if (+timeElapsed > 0) {
-      const utilization = await this.cometContract.getUtilization(
-        market,
-        blockNumber,
-      );
-      const supplyRate = await this.cometContract.getSupplyRate(
-        market,
-        blockNumber,
-        utilization.toString(),
-      );
-      const borrowRate = await this.cometContract.getBorrowRate(
-        market,
-        blockNumber,
-        utilization.toString(),
-      );
-      baseSupplyIndex_ += this.mulFactor(
-        baseSupplyIndex,
-        supplyRate * +timeElapsed,
-      );
-      baseBorrowIndex_ += this.mulFactor(
-        baseBorrowIndex,
-        borrowRate * +timeElapsed,
-      );
-    }
-    return {
-      baseSupplyIndex: baseSupplyIndex_,
-      baseBorrowIndex: baseBorrowIndex_,
-    };
-  }
-
-  mulFactor(n, factor) {
-    return (n * factor) / FACTOR_SCALE;
-  }
-
-  divBaseWei(n, baseWei, market: string) {
-    return (n * baseScale[market]) / baseWei;
+  divBaseWei(n: BigNumber, baseWei: BigNumber, market: string): BigNumber {
+    return n.times(baseScale[market]).div(baseWei);
   }
 
   /**
@@ -127,54 +92,57 @@ export class CalculationService {
     blockTimestamp: number,
   ) {
     try {
-      const totalSupplyBase = 0;
-      const totalBorrowBase = 0;
+      const totalSupplyBase = new BigNumber(0);
+      const totalBorrowBase = new BigNumber(0);
 
-      const { trackingSupplyIndex, trackingBorrowIndex, lastAccrualTime } =
+      // eslint-disable-next-line prefer-const
+      let { trackingSupplyIndex, trackingBorrowIndex, lastAccrualTime } =
         await this.getTrackingInfoInitial(market, blockNumber);
 
-      let trackingSupplyIndex_ = trackingSupplyIndex;
-      let trackingBorrowIndex_ = trackingBorrowIndex;
-
-      const timeElapsed = `${blockTimestamp - +lastAccrualTime}`;
+      const timeElapsed = blockTimestamp - lastAccrualTime;
 
       if (+timeElapsed <= 0) {
         return { trackingSupplyIndex, trackingBorrowIndex };
       }
 
-      const baseTrackingSupplySpeed =
+      const baseTrackingSupplySpeed = new BigNumber(
         await this.cometContract.getBaseTrackingSupplySpeed(
           market,
           blockNumber,
-        );
-      const baseTrackingBorrowSpeed =
+        ),
+      );
+      const baseTrackingBorrowSpeed = new BigNumber(
         await this.cometContract.getBaseTrackingBorrowSpeed(
           market,
           blockNumber,
-        );
-      const baseMinForRewards = await this.cometContract.getBaseMinForRewards(
-        market,
-        blockNumber,
+        ),
+      );
+      const baseMinForRewards = new BigNumber(
+        await this.cometContract.getBaseMinForRewards(market, blockNumber),
       );
 
-      if (totalSupplyBase >= baseMinForRewards) {
-        trackingSupplyIndex_ += this.divBaseWei(
-          baseTrackingSupplySpeed * +timeElapsed,
-          totalSupplyBase,
-          market,
+      if (totalSupplyBase.gte(baseMinForRewards)) {
+        trackingSupplyIndex = trackingSupplyIndex.plus(
+          this.divBaseWei(
+            baseTrackingSupplySpeed.times(timeElapsed),
+            totalSupplyBase,
+            market,
+          ),
         );
       }
-      if (totalBorrowBase >= baseMinForRewards) {
-        trackingBorrowIndex_ += this.divBaseWei(
-          baseTrackingBorrowSpeed * +timeElapsed,
-          totalBorrowBase,
-          market,
+      if (totalBorrowBase.gte(baseMinForRewards)) {
+        trackingBorrowIndex = trackingBorrowIndex.plus(
+          this.divBaseWei(
+            baseTrackingBorrowSpeed.times(timeElapsed),
+            totalBorrowBase,
+            market,
+          ),
         );
       }
 
       return {
-        trackingSupplyIndex: trackingSupplyIndex_,
-        trackingBorrowIndex: trackingBorrowIndex_,
+        trackingSupplyIndex,
+        trackingBorrowIndex,
       };
     } catch (err) {
       this.logger.error(err.message, {
