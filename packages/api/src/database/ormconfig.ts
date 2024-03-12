@@ -16,9 +16,8 @@ export const TypeOrmConfig: TypeOrmModuleOptions = {
   password: process.env.CR_API_DB_PASS ?? postgresConfig.connection.password,
   entities: [
     './dist/models/*.model.*',
-    '*/*/models/*.model.*',
-    `${process.cwd()}*/*/models/*.model.*`,
-    'dist/**/*.entity.js',
+    // '*/*/models/*.model.*',
+    // `${process.cwd()}*/*/models/*.model.*`,
   ],
   migrationsRun: false,
 };

@@ -37,6 +37,7 @@ export class AccruedHelper {
   }
 
   async processAccounts(
+    campaignId: number,
     accounts: Account[],
     market: string,
     blockStart: number,
@@ -86,6 +87,7 @@ export class AccruedHelper {
       this.logger.error(err.message, {
         function: 'processAccounts',
       });
+
       throw err;
     }
   }
