@@ -19,7 +19,7 @@ export class SubgraphService {
     market: string,
     blockNumber: number,
     skip = 0,
-    first = 1000,
+    first = 100,
   ): Promise<any> {
     return execute(
       `

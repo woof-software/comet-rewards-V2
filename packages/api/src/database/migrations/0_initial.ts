@@ -15,14 +15,14 @@ export async function up(knex: Knex): Promise<void> {
 
   await knex.schema.withSchema('public').raw(`
     CREATE OR REPLACE FUNCTION make_lower_address()
-      RETURNS trigger
-    AS
+    RETURNS trigger AS
     $$
     BEGIN
-      new.address := lower(new.address);
-      return new;
+        NEW[TG_ARGV[0]] := lower(NEW[TG_ARGV[0]]);
+        RETURN NEW;
     END;
-    $$ language plpgsql;
+    $$
+    LANGUAGE plpgsql;
   `);
 }
 
