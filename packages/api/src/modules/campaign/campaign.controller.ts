@@ -10,9 +10,10 @@ export class CampaignController {
 
   @Post('/new')
   async startNew(
+    @Body('networkId') networkId: number,
     @Body('market') market: string,
     @Body('blockStart') blockStart: number,
   ) {
-    return this.campaignService.startNew(market, blockStart);
+    return this.campaignService.startNew(networkId, market, blockStart);
   }
 }

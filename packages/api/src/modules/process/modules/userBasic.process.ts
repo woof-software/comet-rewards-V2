@@ -1,28 +1,43 @@
+import { Contract, ContractAbi } from 'web3';
 import { Account } from '../../account/account.types';
-import * as cometABI from '../../contracts/abi/comet.abi.json';
-import { UserBasic } from '../../contracts/contract.types';
+import * as cometABI from '../../contracts/comet/comet.abi.json';
+import { config } from '../../../utils/config';
+
+const networks = config.getTyped('networks');
 
 const { Web3 } = require('web3');
 
 const processTag = process.argv[2];
 
-const web3 = new Web3(process.env.RPC_URL_1);
-
 console.log(`process ${processTag}|${process.pid} started`);
 
-const proceedData = async (
-  accounts: Account[],
+const getContractInstance = (
+  networkId: number,
   market: string,
+): Contract<ContractAbi> => {
+  const network = networks[networkId];
+  if (!network) {
+    throw new Error(`Network ${networkId} not configured`);
+  }
+
+  const web3 = new Web3(network.rpcURL);
+  return new web3.eth.Contract(Object.values(cometABI), market);
+};
+
+const proceedData = async (
+  networkId: number,
+  market: string,
+  accounts: Account[],
   blockNumber: number,
 ) => {
-  const contract = new web3.eth.Contract(Object.values(cometABI), market);
+  const contract = getContractInstance(networkId, market);
 
   const accounts_ = [];
   for (let i = 0; i < accounts.length; i += 1) {
     await contract.methods
       .userBasic(accounts[i].id)
       .call({}, blockNumber)
-      .then((userBasic: UserBasic) => {
+      .then((userBasic: any) => {
         accounts_.push({
           id: accounts[i].id,
           principal: userBasic.principal.toString(),
@@ -57,7 +72,12 @@ process.on('message', async (msg: any) => {
   console.log(
     `${processTag}|${process.pid}: processing ${msg.accounts.length} accounts for market ${msg.market}`,
   );
-  const result = await proceedData(msg.accounts, msg.market, msg.blockNumber);
+  const result = await proceedData(
+    msg.networkId,
+    msg.market,
+    msg.accounts,
+    msg.blockNumber,
+  );
   console.log(`${processTag}|${process.pid}: processing completed`);
   process.send(result);
 });

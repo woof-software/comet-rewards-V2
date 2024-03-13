@@ -13,7 +13,6 @@ import { DefaultLogger } from '@graphql-mesh/utils';
 import MeshCache from '@graphql-mesh/cache-localforage';
 import { fetch as fetchFn } from '@whatwg-node/fetch';
 require('dotenv').config();
-
 import { MeshResolvedSource } from '@graphql-mesh/runtime';
 import { MeshTransform, MeshPlugin } from '@graphql-mesh/types';
 import GraphqlHandler from '@graphql-mesh/graphql';
@@ -31,7 +30,10 @@ import { path as pathModule } from '@graphql-mesh/cross-helpers';
 import { ImportFn } from '@graphql-mesh/types';
 import type { CompoundTypes } from './sources/compound/types';
 import * as importedModule$0 from './sources/compound/introspectionSchema';
-import * as process from 'process';
+import { config } from '../utils/config';
+
+const networks = config.getTyped('networks');
+
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = {
@@ -10173,7 +10175,9 @@ const rootStore = new MeshStore(
 );
 
 export const rawServeConfig: YamlConfig.Config['serve'] = undefined as any;
-export async function getMeshOptions(): Promise<GetMeshOptions> {
+export async function getMeshOptions(
+  networkId: number,
+): Promise<GetMeshOptions> {
   const pubsub = new PubSub();
   const sourcesStore = rootStore.child('sources');
   const logger = new DefaultLogger('GraphClient');
@@ -10193,7 +10197,7 @@ export async function getMeshOptions(): Promise<GetMeshOptions> {
   const compoundHandler = new GraphqlHandler({
     name: 'compound',
     config: {
-      endpoint: `https://gateway-arbitrum.network.thegraph.com/api/${process.env.SUB_GRAPH_API_KEY}/subgraphs/id/5nwMCSHaTqG3Kd2gHznbTXEnZ9QNWsssQfbHhDqQSQFp`,
+      endpoint: networks[networkId].subgraphURL,
     },
     baseDir,
     cache,
@@ -10244,9 +10248,9 @@ export function createBuiltMeshHTTPHandler<
 
 let meshInstance$: Promise<MeshInstance> | undefined;
 
-export function getBuiltGraphClient(): Promise<MeshInstance> {
+export function getBuiltGraphClient(networkId: number): Promise<MeshInstance> {
   if (meshInstance$ == null) {
-    meshInstance$ = getMeshOptions()
+    meshInstance$ = getMeshOptions(networkId)
       .then((meshOptions) => getMesh(meshOptions))
       .then((mesh) => {
         const id = mesh.pubsub.subscribe('destroy', () => {
@@ -10259,8 +10263,8 @@ export function getBuiltGraphClient(): Promise<MeshInstance> {
   return meshInstance$;
 }
 
-export const execute: ExecuteMeshFn = (...args) =>
-  getBuiltGraphClient().then(({ execute }) => execute(...args));
+export const execute = (networkId: number, ...args) =>
+  getBuiltGraphClient(networkId).then(({ execute }) => execute(...args));
 
 export const subscribe: SubscribeMeshFn = (...args) =>
   getBuiltGraphClient().then(({ subscribe }) => subscribe(...args));

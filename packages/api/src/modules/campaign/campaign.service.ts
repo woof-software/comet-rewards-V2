@@ -30,13 +30,16 @@ export class CampaignService {
     this.logger = mainLogger.child({ scope: 'campaign.service' });
   }
 
-  async startNew(market: string, blockStart?: number) {
+  async startNew(networkId: number, market: string, blockStart?: number) {
     try {
       // 1. fix block number, timestamp
       // eslint-disable-next-line no-param-reassign
-      blockStart = blockStart || (await this.providerService.getBlockNumber());
-      const timeStart =
-        await this.providerService.getBlockTimestamp(blockStart);
+      blockStart =
+        blockStart || (await this.providerService.getBlockNumber(networkId));
+      const timeStart = await this.providerService.getBlockTimestamp(
+        networkId,
+        blockStart,
+      );
 
       const campaign = new CampaignModel();
       campaign.market = market.toLowerCase();
@@ -45,15 +48,16 @@ export class CampaignService {
 
       // 2. Request accounts for campaign
       const accounts = await this.accountService.getMarketAccounts(
+        networkId,
         market,
         blockStart,
       );
 
       // 3. Calculate accrued values for accounts
       const accountsAccrued = await this.accruedHelper.processAccounts(
-        campaign.id,
-        accounts,
+        networkId,
         market,
+        accounts,
         blockStart,
         timeStart,
       );

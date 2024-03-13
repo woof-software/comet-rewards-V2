@@ -1,3 +1,5 @@
+import BigNumber from 'bignumber.js';
+
 export type DeepPartial<T> = {
   [P in keyof T]?: DeepPartial<T[P]>;
 };
@@ -29,6 +31,18 @@ export interface IConfigApp {
   processes: {
     userBasic: {
       maxInstances: number;
+    };
+  };
+  networks: {
+    [id: number]: {
+      rpcURL: string;
+      subgraphURL: string;
+      markets: {
+        [id: string]: {
+          accrualDescaleFactor: BigNumber;
+          baseScale: BigNumber;
+        };
+      };
     };
   };
 }

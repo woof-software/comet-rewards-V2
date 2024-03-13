@@ -28,7 +28,7 @@ describe('accrued.helper', () => {
   describe('processAccounts', () => {
     it('should be ok', async () => {
       try {
-        const res = await accruedHelper.processAccounts([], '', 0, 0);
+        const res = await accruedHelper.processAccounts(1, '', [], 0, 0);
         console.log(res);
       } catch (err) {
         console.log(err);

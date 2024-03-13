@@ -33,7 +33,7 @@ describe('campaign.service', () => {
 
     it('should be ok', async () => {
       try {
-        const res = await campaignService.startNew(market);
+        const res = await campaignService.startNew(1, market);
         console.log(res);
       } catch (err) {
         console.log();

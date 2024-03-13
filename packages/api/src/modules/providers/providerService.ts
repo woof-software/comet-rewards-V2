@@ -1,14 +1,16 @@
 import { Inject } from '@nestjs/common';
 import { Logger } from 'winston';
-import * as process from 'process';
 import { FMT_BYTES, FMT_NUMBER, Web3 } from 'web3';
 import { WINSTON_LOGGER } from '../winston/keys';
 import { IProvidersService } from './types';
+import { config } from '../../utils/config';
+
+const networks = config.getTyped('networks');
 
 export class ProviderService implements IProvidersService {
   private readonly logger: Logger;
 
-  private providerRpc: Web3;
+  private providersRpc: { [id: number]: Web3 } = {};
 
   constructor(
     @Inject(WINSTON_LOGGER)
@@ -17,17 +19,23 @@ export class ProviderService implements IProvidersService {
     this.logger = mainLogger.child('provides.service');
   }
 
-  async getProviderRPC(): Promise<Web3> {
-    if (this.providerRpc) return this.providerRpc;
+  async getProviderRPC(networkId: number): Promise<Web3> {
+    if (!networks[networkId]) {
+      throw new Error(`No config for ${networkId}`);
+    }
 
-    const providerRPC = new Web3(process.env.RPC_URL_1);
+    if (this.providersRpc[networkId]) return this.providersRpc[networkId];
+
+    const networkConfig = networks[networkId];
+
+    const providerRPC = new Web3(networkConfig.rpcURL);
     try {
       const network = await providerRPC.eth.net.getId();
       this.logger.info(
         `Established new Web3 connection with network: id=${network}`,
       );
 
-      this.providerRpc = providerRPC;
+      this.providersRpc[networkId] = providerRPC;
       return providerRPC;
     } catch (err) {
       this.logger.error(err.message, { function: 'getProviderRPC' });
@@ -35,16 +43,16 @@ export class ProviderService implements IProvidersService {
     }
   }
 
-  async getBlockNumber(): Promise<number> {
-    const provider = await this.getProviderRPC();
+  async getBlockNumber(networkId: number): Promise<number> {
+    const provider = await this.getProviderRPC(networkId);
     return provider.eth.getBlockNumber({
       number: FMT_NUMBER.NUMBER,
       bytes: FMT_BYTES.HEX,
     });
   }
 
-  async getBlockTimestamp(block: number): Promise<any> {
-    const provider = await this.getProviderRPC();
+  async getBlockTimestamp(networkId: number, block: number): Promise<any> {
+    const provider = await this.getProviderRPC(networkId);
     const { timestamp } = await provider.eth.getBlock(block, false, {
       number: FMT_NUMBER.NUMBER,
       bytes: FMT_BYTES.HEX,

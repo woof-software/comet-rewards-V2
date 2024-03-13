@@ -1,5 +1,9 @@
 import BigNumber from 'bignumber.js';
 
+export enum Contracts {
+  COMET = 'comet',
+}
+
 export interface UserBasic {
   principal: bigint;
   baseTrackingIndex: bigint;

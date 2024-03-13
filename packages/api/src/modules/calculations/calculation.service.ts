@@ -4,9 +4,10 @@ import BigNumber from 'bignumber.js';
 import { WINSTON_LOGGER } from '../winston/keys';
 import { baseScale } from '../../common/constants';
 import { SubgraphService } from '../subgraph/subgraph.service';
-import { CometContract } from '../contracts/Comet.contract';
 import { AccountBasicBN } from '../account/account.types';
 import { IndexInfo } from './calculation.types';
+import { ContractService } from '../contracts/contract.service';
+import { Contracts } from '../contracts/contract.types';
 
 @Injectable()
 export class CalculationService {
@@ -15,8 +16,8 @@ export class CalculationService {
   constructor(
     @Inject(SubgraphService)
     private readonly subgraphService: SubgraphService,
-    @Inject(CometContract)
-    private readonly cometContract: CometContract,
+    @Inject(ContractService)
+    private readonly contractService: ContractService,
     @Inject(WINSTON_LOGGER)
     mainLogger: Logger,
   ) {
@@ -54,10 +55,12 @@ export class CalculationService {
   }
 
   async getTrackingInfoInitial(
+    networkId: number,
     market: string,
     blockNumber: string | number,
   ): Promise<IndexInfo> {
     const marketAccounting = await this.subgraphService.getMarketAccounting(
+      networkId,
       market,
       blockNumber,
     );
@@ -87,17 +90,24 @@ export class CalculationService {
    * @desc Implement accrueInternal function
    * */
   async calculateTrackingIndexes(
+    networkId: number,
     market: string,
     blockNumber,
     blockTimestamp: number,
   ) {
     try {
+      const cometContract = await this.contractService.getInstance(
+        Contracts.COMET,
+        networkId,
+        market,
+      );
+
       const totalSupplyBase = new BigNumber(0);
       const totalBorrowBase = new BigNumber(0);
 
       // eslint-disable-next-line prefer-const
       let { trackingSupplyIndex, trackingBorrowIndex, lastAccrualTime } =
-        await this.getTrackingInfoInitial(market, blockNumber);
+        await this.getTrackingInfoInitial(networkId, market, blockNumber);
 
       const timeElapsed = blockTimestamp - lastAccrualTime;
 
@@ -106,19 +116,13 @@ export class CalculationService {
       }
 
       const baseTrackingSupplySpeed = new BigNumber(
-        await this.cometContract.getBaseTrackingSupplySpeed(
-          market,
-          blockNumber,
-        ),
+        await cometContract.getBaseTrackingSupplySpeed(blockNumber),
       );
       const baseTrackingBorrowSpeed = new BigNumber(
-        await this.cometContract.getBaseTrackingBorrowSpeed(
-          market,
-          blockNumber,
-        ),
+        await cometContract.getBaseTrackingBorrowSpeed(blockNumber),
       );
       const baseMinForRewards = new BigNumber(
-        await this.cometContract.getBaseMinForRewards(market, blockNumber),
+        await cometContract.getBaseMinForRewards(blockNumber),
       );
 
       if (totalSupplyBase.gte(baseMinForRewards)) {
