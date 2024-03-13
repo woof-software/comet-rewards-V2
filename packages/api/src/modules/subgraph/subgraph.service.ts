@@ -16,12 +16,14 @@ export class SubgraphService {
   }
 
   async getAccounts(
+    networkId: number,
     market: string,
     blockNumber: number,
     skip = 0,
     first = 100,
   ): Promise<any> {
     return execute(
+      networkId,
       `
             {
               accounts(first: ${first}, skip: ${skip},
@@ -39,12 +41,14 @@ export class SubgraphService {
   }
 
   async getMarketAccounting(
+    networkId: number,
     market: string,
     blockNumber: string | number,
     first = 1,
     skip = 0,
   ) {
     return execute(
+      networkId,
       `
             {
               marketAccountings(

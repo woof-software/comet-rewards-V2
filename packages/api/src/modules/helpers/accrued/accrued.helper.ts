@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Logger } from 'winston';
 import BigNumber from 'bignumber.js';
+
 import { WINSTON_LOGGER } from '../../winston/keys';
 import {
   Account,
@@ -13,8 +14,9 @@ import { ProcessService } from '../../process/process.service';
 import { ProcessId } from '../../process/process.mapping';
 import { config } from '../../../utils/config';
 import { AccruedCoefficients } from './types';
-import { CometContract } from '../../contracts/Comet.contract';
 import { accrualDescaleFactor } from '../../../common/constants';
+import { ContractService } from '../../contracts/contract.service';
+import { Contracts } from '../../contracts/contract.types';
 
 const { maxInstances } = config.getTyped('processes').userBasic;
 // const maxInstances = 1
@@ -24,8 +26,8 @@ export class AccruedHelper {
   private readonly logger: Logger;
 
   constructor(
-    @Inject(CometContract)
-    private readonly cometContract: CometContract,
+    @Inject(ContractService)
+    private readonly contractService: ContractService,
     @Inject(ProcessService)
     private readonly processService: ProcessService,
     @Inject(CalculationService)
@@ -37,20 +39,22 @@ export class AccruedHelper {
   }
 
   async processAccounts(
-    campaignId: number,
-    accounts: Account[],
+    networkId: number,
     market: string,
+    accounts: Account[],
     blockStart: number,
     timeStart: number,
   ): Promise<any> {
     try {
       const accountsBasic = await this.getAccountsBasic(
-        accounts,
+        networkId,
         market,
+        accounts,
         blockStart,
       );
 
       const coefficients = await this.getCoefficients(
+        networkId,
         market,
         blockStart,
         timeStart,
@@ -78,6 +82,7 @@ export class AccruedHelper {
 
         accountsAccrued.push([
           accountBasic.id,
+          // TODO: resolve negative value issue, remove ABS
           accrued.integerValue(BigNumber.ROUND_DOWN).abs().toString(),
         ]);
       }
@@ -93,18 +98,26 @@ export class AccruedHelper {
   }
 
   private async getCoefficients(
+    networkId: number,
     market: string,
     blockStart: number,
     timeStart: number,
   ): Promise<AccruedCoefficients> {
+    const cometContract = await this.contractService.getInstance(
+      Contracts.COMET,
+      networkId,
+      market,
+    );
+
     const trackingIndexes =
       await this.calculationService.calculateTrackingIndexes(
+        networkId,
         market,
         blockStart,
         timeStart,
       );
     const trackingIndexScale = new BigNumber(
-      await this.cometContract.trackingIndexScale(market, blockStart),
+      await cometContract.trackingIndexScale(blockStart),
     );
 
     return {
@@ -116,8 +129,9 @@ export class AccruedHelper {
   }
 
   private async getAccountsBasic(
-    accounts: Account[],
+    networkId: number,
     market: string,
+    accounts: Account[],
     blockStart: number,
   ): Promise<AccountBasicStr[]> {
     try {
@@ -138,8 +152,9 @@ export class AccruedHelper {
         );
 
         const msg = {
-          accounts: chunks[i],
+          networkId,
           market,
+          accounts: chunks[i],
           blockStart,
         };
 

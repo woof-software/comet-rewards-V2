@@ -18,6 +18,7 @@ export class AccountService {
   }
 
   async getMarketAccounts(
+    networkId: number,
     market: string,
     blockNumber: number,
   ): Promise<Account[]> {
@@ -30,6 +31,7 @@ export class AccountService {
     //     console.log(skip);
     // } while (accounts.length === skip);
     const res = await this.subgraphService.getAccounts(
+      networkId,
       market,
       blockNumber,
       skip,
