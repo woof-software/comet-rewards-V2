@@ -14,6 +14,10 @@ export class CometContract {
     );
   }
 
+  getInstance() {
+    return this.instance;
+  }
+
   async getUserBasic(address: string, blockNumber: number): Promise<any> {
     return this.instance.methods.userBasic(address).call({}, blockNumber);
   }

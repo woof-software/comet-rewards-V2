@@ -7,7 +7,6 @@ import { SubgraphService } from '../subgraph/subgraph.service';
 import { AccountBasicBN } from '../account/account.types';
 import { IndexInfo } from './calculation.types';
 import { ContractService } from '../contracts/contract.service';
-import { Contracts } from '../contracts/contract.types';
 
 @Injectable()
 export class CalculationService {
@@ -96,8 +95,7 @@ export class CalculationService {
     blockTimestamp: number,
   ) {
     try {
-      const cometContract = await this.contractService.getInstance(
-        Contracts.COMET,
+      const cometContract = await this.contractService.getCometContract(
         networkId,
         market,
       );

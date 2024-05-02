@@ -47,6 +47,9 @@ const config: DeepPartial<IConfigApp> = {
           baseScale: new BigNumber(1e18),
         },
       },
+      contracts: {
+        cometRewards: '0x1b0e765f6224c21223aea2af16c1c46e38885a40',
+      },
     },
     137: {
       // polygon
@@ -54,14 +57,13 @@ const config: DeepPartial<IConfigApp> = {
       // eslint-disable-next-line max-len
       subgraphURL: `https://gateway-arbitrum.network.thegraph.com/api/${process.env.SUBGRAPH_API_KEY}/subgraphs/id/AaFtUWKfFdj2x8nnE3RxTSJkHwGHvawH3VWFBykCGzLs`,
       markets: {
-        '0xc3d688b66703497daa19211eedff47f25384cdc3': {
+        '0xf25212e676d1f7f89cd72ffee66158f541246445': {
           accrualDescaleFactor: new BigNumber(1),
           baseScale: new BigNumber(1e6),
         },
-        '0xa17581a9e3356d9a858b789d68b4d866e593ae94': {
-          accrualDescaleFactor: new BigNumber(1e12),
-          baseScale: new BigNumber(1e18),
-        },
+      },
+      contracts: {
+        cometRewards: '0x45939657d1ca34a8fa39a924b71d28fe8431e581',
       },
     },
     42161: {
@@ -79,6 +81,9 @@ const config: DeepPartial<IConfigApp> = {
           baseScale: new BigNumber(1e18),
         },
       },
+      contracts: {
+        cometRewards: '0x88730d254a2f7e6ac8388c3198afd694ba9f7fae',
+      },
     },
     8453: {
       // base
@@ -94,6 +99,9 @@ const config: DeepPartial<IConfigApp> = {
           accrualDescaleFactor: new BigNumber(1e12),
           baseScale: new BigNumber(1e18),
         },
+      },
+      contracts: {
+        cometRewards: '0x123964802e6ababbe1bc9547d72ef1b69b00a6b1',
       },
     },
   },

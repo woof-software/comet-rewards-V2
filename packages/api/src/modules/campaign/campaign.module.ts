@@ -8,12 +8,12 @@ import { SubgraphModule } from '../subgraph';
 import { MerkleModule } from '../merkle';
 import { ProvidersModule } from '../providers';
 import { HelperModule } from '../helpers/helper.module';
-import { CampaignModel } from '../../models';
-import { ParticipantModel } from '../../models/participant.model';
+import { CampaignEntity } from '../../entities';
+import { ParticipantEntity } from '../../entities/participant.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([CampaignModel, ParticipantModel]),
+    TypeOrmModule.forFeature([CampaignEntity, ParticipantEntity]),
     AccountModule,
     ContractsModule,
     SubgraphModule,

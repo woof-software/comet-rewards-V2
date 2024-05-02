@@ -6,8 +6,9 @@ import { AccountService } from '../account/account.service';
 import { MerkleService } from '../merkle/merkle.service';
 import { ProviderService } from '../providers/providerService';
 import { AccruedHelper } from '../helpers/accrued/accrued.helper';
-import { CampaignModel } from '../../models';
-import { ParticipantModel } from '../../models/participant.model';
+import { CampaignEntity } from '../../entities';
+import { ParticipantEntity } from '../../entities/participant.entity';
+import { ContractService } from '../contracts/contract.service';
 
 @Injectable()
 export class CampaignService {
@@ -18,6 +19,8 @@ export class CampaignService {
     private readonly accountService: AccountService,
     @Inject(ProviderService)
     private readonly providerService: ProviderService,
+    @Inject(ContractService)
+    private readonly contractService: ContractService,
     @Inject(AccruedHelper)
     private readonly accruedHelper: AccruedHelper,
     @Inject(MerkleService)
@@ -28,6 +31,25 @@ export class CampaignService {
     mainLogger: Logger,
   ) {
     this.logger = mainLogger.child({ scope: 'campaign.service' });
+  }
+
+  async test() {
+    try {
+      const cometRewards = await this.contractService.getCometRewardsContract(
+        1,
+        '0xc3d688b66703497daa19211eedff47f25384cdc3',
+      );
+      const instance = await cometRewards.getInstance();
+      await instance.methods
+        .getRewardOwed(
+          '0xc3d688B66703497DAA19211EEdff47f25384cdc3',
+          '0x00be5cbdb34636ab56efa6f8f06cf1c147dc5cbb',
+        )
+        .call();
+      console.log();
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   async startNew(networkId: number, market: string, blockStart?: number) {
@@ -41,7 +63,7 @@ export class CampaignService {
         blockStart,
       );
 
-      const campaign = new CampaignModel();
+      const campaign = new CampaignEntity();
       campaign.market = market.toLowerCase();
       campaign.blockStart = blockStart;
       await this.dataSource.manager.save(campaign);
@@ -69,7 +91,7 @@ export class CampaignService {
       // eslint-disable-next-line no-restricted-syntax
       for (const [i, v] of tree.entries()) {
         const proof = tree.getProof(i);
-        const participant = new ParticipantModel();
+        const participant = new ParticipantEntity();
         participant.campaignId = campaign.id;
         [participant.address, participant.accruedStart] = v;
         participant.proof = proof;

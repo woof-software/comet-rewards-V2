@@ -43,6 +43,9 @@ export interface IConfigApp {
           baseScale: BigNumber;
         };
       };
+      contracts: {
+        cometRewards: string;
+      };
     };
   };
 }

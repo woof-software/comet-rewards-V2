@@ -3,7 +3,7 @@ import { FMT_BYTES, FMT_NUMBER } from 'web3-types';
 import { AccountService } from './account.service';
 import { WinstonModule } from '../winston';
 import { SubgraphModule } from '../subgraph';
-import { getTestRPCProvider } from '../../utils/test-helper';
+import { getTestRPCProvider } from '../../utils/test-helper.test';
 
 describe('account.service', () => {
   let moduleRef: TestingModule;
@@ -30,7 +30,7 @@ describe('account.service', () => {
           number: FMT_NUMBER.NUMBER,
           bytes: FMT_BYTES.HEX,
         });
-        const res = await accountService.getMarketAccounts(market, block);
+        const res = await accountService.getMarketAccounts(1, market, block);
         expect(res).toBeTruthy();
       } catch (err) {
         console.log(err);

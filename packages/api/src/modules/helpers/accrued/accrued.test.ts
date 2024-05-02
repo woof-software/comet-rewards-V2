@@ -1,4 +1,4 @@
-import '../../../utils/test-helper';
+import '../../../utils/test-helper.test';
 import { Test, TestingModule } from '@nestjs/testing';
 import { WinstonModule } from '../../winston';
 import { SubgraphModule } from '../../subgraph';

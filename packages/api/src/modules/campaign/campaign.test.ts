@@ -1,4 +1,6 @@
+import '../../utils/test-helper.test';
 import { Test, TestingModule } from '@nestjs/testing';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProvidersModule } from '../providers';
 import { ContractsModule } from '../contracts/contracts.module';
 import { AccountModule } from '../account';
@@ -6,6 +8,8 @@ import { WinstonModule } from '../winston';
 import { CampaignService } from './campaign.service';
 import { SubgraphModule } from '../subgraph';
 import { MerkleModule } from '../merkle';
+import { HelperModule } from '../helpers/helper.module';
+import { TypeOrmConfig } from '../../database/ormconfig';
 
 describe('campaign.service', () => {
   let moduleRef: TestingModule;
@@ -15,9 +19,12 @@ describe('campaign.service', () => {
   beforeAll(async () => {
     moduleRef = await Test.createTestingModule({
       imports: [
+        TypeOrmModule.forRoot({ keepConnectionAlive: true, ...TypeOrmConfig }),
+        TypeOrmModule.forFeature([]),
         WinstonModule,
         ProvidersModule,
         ContractsModule,
+        HelperModule,
         AccountModule,
         SubgraphModule,
         MerkleModule,
@@ -38,6 +45,13 @@ describe('campaign.service', () => {
       } catch (err) {
         console.log();
       }
+    });
+  });
+
+  describe('test', () => {
+    it('try', async () => {
+      const res = await campaignService.test();
+      console.log(res);
     });
   });
 });

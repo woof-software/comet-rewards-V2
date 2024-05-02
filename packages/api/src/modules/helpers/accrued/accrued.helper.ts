@@ -16,7 +16,6 @@ import { config } from '../../../utils/config';
 import { AccruedCoefficients } from './types';
 import { accrualDescaleFactor } from '../../../common/constants';
 import { ContractService } from '../../contracts/contract.service';
-import { Contracts } from '../../contracts/contract.types';
 
 const { maxInstances } = config.getTyped('processes').userBasic;
 // const maxInstances = 1
@@ -103,8 +102,7 @@ export class AccruedHelper {
     blockStart: number,
     timeStart: number,
   ): Promise<AccruedCoefficients> {
-    const cometContract = await this.contractService.getInstance(
-      Contracts.COMET,
+    const cometContract = await this.contractService.getCometContract(
       networkId,
       market,
     );

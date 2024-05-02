@@ -14,6 +14,17 @@ services:
     environment:
       - POSTGRES_USER=comet
       - POSTGRES_PASSWORD=comet
+  rabbitmq:
+    build: rabbitmq/
+    container_name: rabbitmq-dev
+    restart: always
+    ports:
+      - '5677:5672' # broker
+      - '15677:15672' # management UI
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq/
+    networks:
+      - cr-dev
   api-test-db:
     build: db/
     container_name: cr-test-db
@@ -32,6 +43,8 @@ volumes:
     name: cr-api-dev
   api-test-db:
     name: cr-api-test
+  rabbitmq:
+    name: rabbitmq
 
 networks:
   cr-dev:
