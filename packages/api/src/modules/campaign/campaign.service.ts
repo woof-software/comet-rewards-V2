@@ -124,17 +124,17 @@ export class CampaignService {
     networkId: number,
     campaignId: number,
     market: string,
-    blockStart?: number,
+    blockNumber?: number,
   ): Promise<Job> {
     // eslint-disable-next-line no-param-reassign
-    blockStart =
-      blockStart || (await this.providerService.getBlockNumber(networkId));
+    blockNumber =
+      blockNumber || (await this.providerService.getBlockNumber(networkId));
 
     const args: CampaignStartArgs = {
       networkId,
       campaignId,
       market,
-      blockStart,
+      blockNumber,
     };
     const job = await this.jobService.registerJob<CampaignStartArgs>(
       JobType.CAMPAIGN_START,

@@ -1,8 +1,8 @@
 import { Channel } from 'amqplib';
 import { DataSource } from 'typeorm';
+import { Logger } from 'winston';
 import { ResultExchanges, TaskQueues } from '../../constants';
 import { Task } from '../task/task';
-import { mainLogger } from '../../../winston';
 import {
   ChainDataTaskMessage,
   ChainDataTaskResult,
@@ -21,14 +21,20 @@ export class ChainDataTask extends Task {
   constructor(
     channel: Channel,
     private readonly providerService: ProviderService,
+    mainLogger: Logger,
   ) {
-    const logger = mainLogger.child({ scope: 'subgraph.task' });
-    super(channel, TaskQueues.SUBGRAPH, ResultExchanges.SUBGRAPH, logger);
+    const logger = mainLogger;
+    super(channel, TaskQueues.CHAIN_DATA, ResultExchanges.CHAIN_DATA, logger);
   }
 
   async handler(msg) {
     const headers = <MessageHeaders>msg.properties.headers;
     try {
+      this.logger.info('task handler consumed');
+      await new Promise((resolve) => {
+        setTimeout(resolve, 100000);
+      });
+
       const data: ChainDataTaskMessage = JSON.parse(msg.content.toString());
 
       switch (data.type) {
@@ -52,7 +58,7 @@ export class ChainDataTask extends Task {
       this.channel.ack(msg);
     } catch (err) {
       this.logger.error(err.message);
-      await this.handleError(headers, err.message);
+      // await this.handleError(headers, err.message);
       this.channel.ack(msg);
     }
   }

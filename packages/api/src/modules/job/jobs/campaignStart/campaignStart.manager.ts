@@ -51,7 +51,7 @@ export class CampaignStartManager implements JobManager {
         type: SubgraphTaskTypes.MARKET_ACCOUNTS,
         networkId: this.job.args.networkId,
         market: this.job.args.market,
-        args: { blockNumber: this.job.args.blockNumber },
+        blockNumber: this.job.args.blockNumber,
       };
       const headers: MessageHeaders = { jobId: this.job.id };
 

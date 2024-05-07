@@ -2,10 +2,18 @@ import { Logger } from 'winston';
 import { Channel, Replies } from 'amqplib';
 import { MessageHeaders, StageHandler } from '../../../../types';
 import { Job } from '../../../../../../entities/job.entity';
-import { COMPLETION_EXCHANGE, ResultExchanges } from '../../../../constants';
+import {
+  COMPLETION_EXCHANGE,
+  ResultExchanges,
+  TaskQueues,
+} from '../../../../constants';
 import { mainLogger } from '../../../../../winston';
 import { SubgraphTaskResult } from '../../../../tasks/subgraph/types';
 import { CompletionMessage } from '../completion/types';
+import {
+  ChainDataTaskMessage,
+  ChainDataTaskType,
+} from '../../../../tasks/chainData/types';
 
 export class SubgraphAccountStage implements StageHandler {
   readonly queueName: string;
@@ -62,6 +70,21 @@ export class SubgraphAccountStage implements StageHandler {
     if (result.error) {
       this.error(result.error, headers);
       return this.channel.ack(msg);
+    }
+
+    for (let i = 0; i < result.accounts.length; i += 1) {
+      const message: ChainDataTaskMessage = {
+        type: ChainDataTaskType.ACCRUED,
+        market: this.job.args.market,
+        blockNumber: this.job.args.blockNumber,
+        networkId: this.job.args.networkId,
+        address: result.accounts[i].id,
+      };
+      this.channel.sendToQueue(
+        TaskQueues.CHAIN_DATA,
+        Buffer.from(JSON.stringify(message)),
+        { headers },
+      );
     }
 
     return this.channel.ack(msg);

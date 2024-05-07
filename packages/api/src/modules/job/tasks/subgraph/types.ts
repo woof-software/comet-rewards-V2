@@ -5,10 +5,10 @@ export enum SubgraphTaskTypes {
 }
 
 export interface SubgraphTaskMessage {
+  type: SubgraphTaskTypes;
   networkId: number;
   market: string;
-  type: SubgraphTaskTypes;
-  args: any;
+  blockNumber: number;
 }
 
 export interface SubgraphTaskResult {

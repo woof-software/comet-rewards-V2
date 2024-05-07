@@ -35,12 +35,11 @@ export class SubgraphTask extends Task {
 
       switch (data.type) {
         case SubgraphTaskTypes.MARKET_ACCOUNTS: {
-          const { blockNumber } = data.args;
           await this.getMarketAccounts(
             headers,
             data.networkId,
             data.market,
-            blockNumber,
+            data.blockNumber,
           );
           break;
         }

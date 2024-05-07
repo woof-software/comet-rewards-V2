@@ -8,6 +8,8 @@ import { SubgraphTask } from './subgraph';
 import { ResultExchanges, TaskQueues } from '../constants';
 import { WINSTON_LOGGER } from '../../winston/keys';
 import { SubgraphService } from '../../subgraph';
+import { ChainDataTask } from './chainData/chainData.task';
+import { ProviderService } from '../../providers/providerService';
 
 @Injectable()
 export class TaskService {
@@ -22,6 +24,7 @@ export class TaskService {
   constructor(
     @Inject(AmqpService)
     private readonly amqpService: AmqpService,
+    @Inject(ProviderService) private readonly providerService: ProviderService,
     @Inject(DataSource)
     private readonly dataSource: DataSource,
     @Inject(WINSTON_LOGGER)
@@ -66,6 +69,7 @@ export class TaskService {
 
   async registerTaskHandlers() {
     const channel = await this.amqpService.getChannel();
+
     const subgraphTaskHandler = new SubgraphTask(
       channel,
       this.dataSource,
@@ -73,5 +77,13 @@ export class TaskService {
     );
     this.taskHandlers.push(subgraphTaskHandler);
     await subgraphTaskHandler.registerHandler();
+
+    const chainDataTaskHandler = new ChainDataTask(
+      channel,
+      this.providerService,
+      this.logger,
+    );
+    this.taskHandlers.push(chainDataTaskHandler);
+    await chainDataTaskHandler.registerHandler();
   }
 }
