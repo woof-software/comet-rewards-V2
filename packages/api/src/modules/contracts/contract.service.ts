@@ -23,6 +23,6 @@ export class ContractService {
     market: string,
   ): Promise<CometRewardsContract> {
     const providerRPC = await this.providerService.getProviderRPC(networkId);
-    return new CometRewardsContract(providerRPC, market);
+    return new CometRewardsContract(providerRPC, networkId, market);
   }
 }

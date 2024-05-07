@@ -7,7 +7,6 @@ import { ContractsModule } from '../contracts/contracts.module';
 import { SubgraphModule } from '../subgraph';
 import { MerkleModule } from '../merkle';
 import { ProvidersModule } from '../providers';
-import { HelperModule } from '../helpers/helper.module';
 import { CampaignEntity, ParticipantEntity } from '../../entities';
 import { JobModule } from '../job';
 
@@ -19,7 +18,6 @@ import { JobModule } from '../job';
     SubgraphModule,
     MerkleModule,
     ProvidersModule,
-    HelperModule,
     JobModule,
   ],
   controllers: [CampaignController],

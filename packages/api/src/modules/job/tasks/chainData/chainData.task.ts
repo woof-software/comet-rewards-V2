@@ -31,9 +31,6 @@ export class ChainDataTask extends Task {
     const headers = <MessageHeaders>msg.properties.headers;
     try {
       this.logger.info('task handler consumed');
-      await new Promise((resolve) => {
-        setTimeout(resolve, 100000);
-      });
 
       const data: ChainDataTaskMessage = JSON.parse(msg.content.toString());
 
@@ -74,18 +71,17 @@ export class ChainDataTask extends Task {
       const provider = await this.providerService.getProviderRPC(networkId);
       const cometRewards = new CometRewardsContract(
         provider,
+        networkId,
         market,
       ).getInstance();
 
-      const accrued = <string>(
-        await cometRewards.methods
-          .getRewardsOwed(market, address)
-          .call({}, blockNumber)
-      );
+      const result: any = await cometRewards.methods
+        .getRewardOwed(market, address)
+        .call({}, blockNumber);
 
       const message: ChainDataTaskResult = {
         address,
-        accrued,
+        accrued: result.owed.toString(),
       };
 
       this.channel.publish(

@@ -6,7 +6,6 @@ import { WINSTON_LOGGER } from '../winston/keys';
 import { AccountService } from '../account';
 import { MerkleService } from '../merkle/merkle.service';
 import { ProviderService } from '../providers/providerService';
-import { AccruedHelper } from '../helpers/accrued/accrued.helper';
 import { CampaignEntity, ParticipantEntity } from '../../entities';
 import { ContractService } from '../contracts/contract.service';
 import { JobService, JobType } from '../job';
@@ -24,8 +23,6 @@ export class CampaignService {
     private readonly providerService: ProviderService,
     @Inject(ContractService)
     private readonly contractService: ContractService,
-    @Inject(AccruedHelper)
-    private readonly accruedHelper: AccruedHelper,
     @Inject(MerkleService)
     private readonly merkleService: MerkleService,
     @Inject(JobService)
@@ -63,34 +60,14 @@ export class CampaignService {
       // eslint-disable-next-line no-param-reassign
       blockStart =
         blockStart || (await this.providerService.getBlockNumber(networkId));
-      const timeStart = await this.providerService.getBlockTimestamp(
-        networkId,
-        blockStart,
-      );
 
       const campaign = new CampaignEntity();
       campaign.market = market.toLowerCase();
       campaign.blockStart = blockStart;
       await this.dataSource.manager.save(campaign);
 
-      // 2. Request accounts for campaign
-      const accounts = await this.accountService.getMarketAccounts(
-        networkId,
-        market,
-        blockStart,
-      );
-
-      // 3. Calculate accrued values for accounts
-      const accountsAccrued = await this.accruedHelper.processAccounts(
-        networkId,
-        market,
-        accounts,
-        blockStart,
-        timeStart,
-      );
-
       // 4. Generate tree from accrued accounts
-      const tree = this.merkleService.generateTree(accountsAccrued);
+      const tree = this.merkleService.generateTree([]);
 
       // TODO: rework
       // eslint-disable-next-line no-restricted-syntax
