@@ -1,12 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { Logger } from 'winston';
-import { Job } from '../../entities';
+import { Job } from '../../entities/job.entity';
 import { JobStatus, JobType } from './constants';
 import { WINSTON_LOGGER } from '../winston/keys';
 import { CampaignStartManager } from './jobs/campaignStart/campaignStart.manager';
 import { JobManager } from './types';
-import { AmqpService } from '../amqp/amqp.service';
+import { AmqpService } from '../amqp';
+import { errors } from './messages';
 
 @Injectable()
 export class JobService {
@@ -24,39 +25,14 @@ export class JobService {
   }
 
   /**
-   * @desc Get constant unique job key from job arguments
-   * */
-  getKey(type: JobType, args: any): string {
-    switch (type) {
-      case JobType.CAMPAIGN_START: {
-        return CampaignStartManager.getKey(args);
-      }
-      default: {
-        throw new Error(
-          'Job type unknown or key can not be generated for this type',
-        );
-      }
-    }
-  }
-
-  /**
    * @desc Register new job
    *
    * @param   type    {JobType}   Job type
    * @param   key     {string}    Unique job key received from getKey()
    * @param   args    {Object}    Job arguments
    * */
-  async registerJob(type: JobType, key: string, args: any): Promise<Job> {
-    let job = await this.dataSource.manager.findOne(Job, {
-      where: { key },
-    });
-
-    if (job) {
-      return job;
-    }
-
-    job = new Job();
-    job.key = key;
+  async registerJob<T>(type: JobType, args: T): Promise<Job> {
+    const job = new Job();
     job.type = type;
     job.status = JobStatus.REGISTERED;
     job.args = args;
@@ -67,18 +43,17 @@ export class JobService {
   /**
    * @desc Start registered job
    *
-   * @param   key     {string}   Unique job key
+   * @param id  {Number}    Job id
    * */
-  async startJob(key: string): Promise<void> {
-    // check if job already completed
+  async startJob(id: number): Promise<void> {
     const job = await this.dataSource.manager.findOne(Job, {
-      where: { key },
+      where: { id },
     });
 
-    if (!job) throw new Error('Job is not registered');
+    if (!job) throw errors.jobNotFound(id);
 
-    if (job.status === JobStatus.COMPLETED || JobStatus.ERROR) {
-      throw new Error(`job ${key} already completed status: ${job.status}`);
+    if (job.status === JobStatus.COMPLETED || job.status === JobStatus.FAILED) {
+      throw errors.jobCompleted(id, job.status);
     }
 
     const channel = await this.amqpService.getChannel();
@@ -97,13 +72,12 @@ export class JobService {
         break;
       }
       default: {
-        // TODO: update job with error
-        break;
+        const error = errors.incorrectType(job.type);
+        job.status = JobStatus.FAILED;
+        job.error = error.message;
+        await this.dataSource.manager.save(job);
+        throw errors.incorrectType(job.type);
       }
     }
-  }
-
-  wakeJobs() {
-    console.log();
   }
 }

@@ -2,7 +2,7 @@ import { Channel, Message } from 'amqplib';
 import { Logger } from 'winston';
 import { ResultExchanges, TaskQueues } from '../../constants';
 import { Handler } from '../../types';
-import { errors } from './task.messages';
+import { errors } from './messages';
 
 /**
  * @classdesc This is the generic class for all tasks and should not be used directly in task definition

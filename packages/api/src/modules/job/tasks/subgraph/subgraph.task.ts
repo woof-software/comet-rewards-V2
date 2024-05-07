@@ -3,10 +3,14 @@ import { DataSource } from 'typeorm';
 import { ResultExchanges, TaskQueues } from '../../constants';
 import { Task } from '../task/task';
 import { mainLogger } from '../../../winston';
-import { SubgraphTaskMessage, SubgraphTaskTypes } from './types';
-import { TaskHelperSubgraph } from '../../../../entities';
-import { SubgraphService } from '../../../subgraph/subgraph.service';
-import { errors } from './messages';
+import {
+  SubgraphTaskMessage,
+  SubgraphTaskResult,
+  SubgraphTaskTypes,
+} from './types';
+import { TaskSubgraph } from '../../../../entities';
+import { SubgraphService } from '../../../subgraph';
+import { MessageHeaders } from '../../types';
 
 export class SubgraphTask extends Task {
   private readonly dataSource: DataSource;
@@ -25,7 +29,7 @@ export class SubgraphTask extends Task {
   }
 
   async handler(msg) {
-    const { jobId } = msg.properties.headers;
+    const headers = <MessageHeaders>msg.properties.headers;
     try {
       const data: SubgraphTaskMessage = JSON.parse(msg.content.toString());
 
@@ -33,7 +37,7 @@ export class SubgraphTask extends Task {
         case SubgraphTaskTypes.MARKET_ACCOUNTS: {
           const { blockNumber } = data.args;
           await this.getMarketAccounts(
-            jobId,
+            headers,
             data.networkId,
             data.market,
             blockNumber,
@@ -41,28 +45,31 @@ export class SubgraphTask extends Task {
           break;
         }
         default: {
-          throw errors.unknownTaskType();
+          // TODO: finish job with error
+          this.logger.error('Unknown task type');
+          break;
         }
       }
 
       this.channel.ack(msg);
     } catch (err) {
       this.logger.error(err.message);
-      await this.handleError(jobId, err.message);
+      await this.handleError(headers, err.message);
       this.channel.ack(msg);
     }
   }
 
   async getMarketAccounts(
-    jobId: number,
+    headers: MessageHeaders,
     networkId: number,
     market: string,
     blockNumber: number,
     first = 1000,
   ): Promise<void> {
-    let taskHelper = await this.dataSource.manager.findOne(TaskHelperSubgraph, {
+    let taskHelper = await this.dataSource.manager.findOne(TaskSubgraph, {
       where: {
-        jobId,
+        jobId: headers.jobId,
+        type: SubgraphTaskTypes.MARKET_ACCOUNTS,
       },
     });
 
@@ -71,8 +78,8 @@ export class SubgraphTask extends Task {
     }
 
     if (!taskHelper) {
-      taskHelper = new TaskHelperSubgraph();
-      taskHelper.jobId = jobId;
+      taskHelper = new TaskSubgraph();
+      taskHelper.jobId = headers.jobId;
       taskHelper.type = SubgraphTaskTypes.MARKET_ACCOUNTS;
       taskHelper.skip = 0;
       taskHelper.count = 0;
@@ -90,7 +97,9 @@ export class SubgraphTask extends Task {
         first,
       );
       if (result.errors?.length) {
-        throw new Error(result.errors[0]);
+        taskHelper.finished = false;
+        await this.dataSource.manager.save(taskHelper);
+        throw new Error(result.errors[0].message);
       }
 
       const { accounts } = result.data;
@@ -101,7 +110,7 @@ export class SubgraphTask extends Task {
         taskHelper.finished = true;
       }
 
-      const message = {
+      const message: SubgraphTaskResult = {
         accounts,
       };
       // send to result exchange
@@ -109,6 +118,7 @@ export class SubgraphTask extends Task {
         this.resultExchange,
         '',
         Buffer.from(JSON.stringify(message)),
+        { headers },
       );
 
       // update task helper
@@ -121,7 +131,7 @@ export class SubgraphTask extends Task {
   /**
    * @desc Handle error inside task, send error message to result exchange
    * */
-  async handleError(jobId: number, error: string) {
+  async handleError(headers: MessageHeaders, error: string) {
     const message = {
       error,
     };
@@ -129,7 +139,7 @@ export class SubgraphTask extends Task {
       this.resultExchange,
       '',
       Buffer.from(JSON.stringify(message)),
-      { headers: jobId },
+      { headers },
     );
   }
 }

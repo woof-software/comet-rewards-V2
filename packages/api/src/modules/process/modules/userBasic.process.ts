@@ -1,5 +1,5 @@
 import { Contract, ContractAbi } from 'web3';
-import { Account } from '../../account/account.types';
+import { Account } from '../../account/types';
 import * as cometABI from '../../contracts/comet/comet.abi.json';
 import { config } from '../../../utils/config';
 

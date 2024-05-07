@@ -1,18 +1,11 @@
-import {
-  assert,
-  createStubInstance,
-  fake,
-  replace,
-  restore,
-  SinonStubbedInstance,
-} from 'sinon';
+import { assert, createStubInstance, SinonStubbedInstance } from 'sinon';
 import { Logger } from 'winston';
 import { JobService } from './job.service';
 import { JobStatus, JobType } from './constants';
-import { CampaignStartManager } from './jobs/campaignStart/campaignStart.manager';
 import { Job } from '../../entities/job.entity';
-import { AmqpService } from '../amqp/amqp.service';
+import { AmqpService } from '../amqp';
 import { getDataSourceStubs } from '../../utils/stubs.test';
+import { errors } from './messages';
 
 describe('job.service', () => {
   let jobService: JobService;
@@ -28,56 +21,83 @@ describe('job.service', () => {
     jobService = new JobService(dataSourceStub, amqpServiceStub, loggerStub);
   });
 
-  describe('getKey', () => {
-    afterAll(() => {
-      restore();
-    });
-    it('get key for campaign_start job call CampaignStartManager.getKey', () => {
-      const getKeySpy = fake();
-      replace(CampaignStartManager, 'getKey', getKeySpy);
-      jobService.getKey(JobType.CAMPAIGN_START, {});
-      assert.called(getKeySpy);
-    });
-
-    it('unknown job type should throw error', () => {
-      try {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        jobService.getKey('unknown', []);
-      } catch (err) {
-        expect(err.message).toBeTruthy();
-      }
-      assert.fail('should throw error');
-    });
-  });
-
   describe('registerJob', () => {
-    it('if job already registered, return entity', async () => {
-      const jobExists = new Job();
-      jobExists.key = 'key';
-      entityManagerStub.findOne.returns(Promise.resolve(jobExists));
-      const res = await jobService.registerJob(JobType.CAMPAIGN_START, '', {});
-      expect(res).toContainEqual(jobExists);
-    });
-
-    it('register new job, should be ok', async () => {
+    it('register new job should be ok', async () => {
       const type = JobType.CAMPAIGN_START;
-      const key = 'key';
       const args = {
         arg1: '1',
         arg2: 2,
       };
 
       const job = new Job();
-      job.key = key;
       job.type = type;
       job.args = args;
       job.status = JobStatus.REGISTERED;
 
-      const res = await jobService.registerJob(type, key, args);
+      const res = await jobService.registerJob(type, args);
 
       assert.calledOnceWithExactly(entityManagerStub.save, Job, job);
       expect(res).toEqual(job);
+    });
+  });
+
+  describe('startJob', () => {
+    it('if no job was found by id, throw error', async () => {
+      const id = -1;
+      entityManagerStub.findOne.resolves(null);
+
+      try {
+        await jobService.startJob(id);
+        assert.fail('should throw error');
+      } catch (err) {
+        expect(err).toEqual(errors.jobNotFound(id));
+      }
+    });
+
+    it('if job completed, throw error', async () => {
+      const id = 1;
+      const job = new Job();
+      job.status = JobStatus.COMPLETED;
+
+      entityManagerStub.findOne.resolves(job);
+
+      // Job status: completed
+      try {
+        await jobService.startJob(id);
+        assert.fail('should throw error');
+      } catch (err) {
+        expect(err).toEqual(errors.jobCompleted(id, job.status));
+      }
+
+      // Job status: error
+      job.status = JobStatus.FAILED;
+      try {
+        await jobService.startJob(id);
+        assert.fail('should throw error');
+      } catch (err) {
+        expect(err).toEqual(errors.jobCompleted(id, job.status));
+      }
+    });
+
+    it('start job with incorrect type should update job with error', async () => {
+      const id = 1;
+      const type = 'incorrect';
+      const job = new Job();
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      job.type = type;
+
+      entityManagerStub.findOne.resolves(job);
+      try {
+        await jobService.startJob(id);
+        assert.fail('should throw error');
+      } catch (err) {
+        expect(err).toEqual(errors.incorrectType(job.type));
+        expect(entityManagerStub.save.args[0][0]['status']).toEqual(
+          JobStatus.FAILED,
+        );
+        expect(entityManagerStub.save.args[0][0]['error']).toEqual(err.message);
+      }
     });
   });
 });

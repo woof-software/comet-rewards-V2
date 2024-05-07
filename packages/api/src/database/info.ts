@@ -4,4 +4,6 @@ export const providers = {
 export const tables = {
   CAMPAIGNS: 'campaigns',
   PARTICIPANTS: 'participants',
+  JOBS: 'jobs',
+  TASK_SUBGRAPH: 'task_subgraph',
 };

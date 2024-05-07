@@ -18,4 +18,4 @@ const config = {
   testEnvironment: 'node',
   testTimeout: 15000,
 };
-export default config;
+module.exports = config;

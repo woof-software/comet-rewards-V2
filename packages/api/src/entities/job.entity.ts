@@ -1,13 +1,11 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { JobStatus, JobType } from '../modules/job/constants';
+import { JobStatus, JobType } from '../modules/job';
+import { tables } from '../database/info';
 
-@Entity()
+@Entity(tables.JOBS)
 export class Job {
   @PrimaryGeneratedColumn()
   id: number;
-
-  @Column()
-  key?: string;
 
   @Column({
     type: 'varchar',
@@ -19,4 +17,13 @@ export class Job {
 
   @Column({ type: 'json' })
   args: any;
+
+  @Column()
+  error: string;
+
+  @Column()
+  createdAt: Date;
+
+  @Column()
+  updatedAt: Date;
 }

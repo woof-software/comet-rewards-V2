@@ -3,7 +3,7 @@ import { assert, define, fake, replace, restore } from 'sinon';
 import { Task } from './task';
 import { ResultExchanges, TaskQueues } from '../../constants';
 import { mainLogger } from '../../../winston';
-import { errors } from './task.messages';
+import { errors } from './messages';
 
 describe('task', () => {
   const channelStub = <Channel>{};

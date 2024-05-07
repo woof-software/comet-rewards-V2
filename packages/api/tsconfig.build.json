@@ -6,6 +6,6 @@
     "dist",
     "**/*.test.ts",
     "src/utils/test-helper.test.ts",
-    "jest.config.ts"
+    "jest.config.js"
   ]
 }

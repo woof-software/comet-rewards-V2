@@ -4,10 +4,10 @@ export enum JobType {
 
 export enum JobStatus {
   REGISTERED = 'registered', // job registered for processing
-  STARTED = 'started', // job started, request sent to first task queue
+  RUNNING = 'running', // job started, request sent to first task queue
   FINISHING = 'finishing', // job finished, completion or error handler unregistering queues
   COMPLETED = 'completed', // job completed successfully
-  ERROR = 'error', // job completed with error
+  FAILED = 'failed', // job failed with error
 }
 
 export enum TaskQueues {
@@ -21,3 +21,5 @@ export enum ResultExchanges {
   CHAIN_DATA = 'result_chain_data',
   CALCULATION = 'result_calculation',
 }
+
+export const COMPLETION_EXCHANGE = 'job_completion_exchange';

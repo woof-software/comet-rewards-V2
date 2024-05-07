@@ -8,8 +8,8 @@ import { SubgraphModule } from '../subgraph';
 import { MerkleModule } from '../merkle';
 import { ProvidersModule } from '../providers';
 import { HelperModule } from '../helpers/helper.module';
-import { CampaignEntity } from '../../entities';
-import { ParticipantEntity } from '../../entities/participant.entity';
+import { CampaignEntity, ParticipantEntity } from '../../entities';
+import { JobModule } from '../job';
 
 @Module({
   imports: [
@@ -20,6 +20,7 @@ import { ParticipantEntity } from '../../entities/participant.entity';
     MerkleModule,
     ProvidersModule,
     HelperModule,
+    JobModule,
   ],
   controllers: [CampaignController],
   providers: [CampaignService],

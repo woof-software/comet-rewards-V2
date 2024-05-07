@@ -4,7 +4,7 @@ import BigNumber from 'bignumber.js';
 import { WINSTON_LOGGER } from '../winston/keys';
 import { baseScale } from '../../common/constants';
 import { SubgraphService } from '../subgraph/subgraph.service';
-import { AccountBasicBN } from '../account/account.types';
+import { AccountBasicBN } from '../account/types';
 import { IndexInfo } from './calculation.types';
 import { ContractService } from '../contracts/contract.service';
 

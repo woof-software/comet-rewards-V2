@@ -1,14 +1,17 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Logger } from 'winston';
 import { DataSource } from 'typeorm';
+
 import { WINSTON_LOGGER } from '../winston/keys';
-import { AccountService } from '../account/account.service';
+import { AccountService } from '../account';
 import { MerkleService } from '../merkle/merkle.service';
 import { ProviderService } from '../providers/providerService';
 import { AccruedHelper } from '../helpers/accrued/accrued.helper';
-import { CampaignEntity } from '../../entities';
-import { ParticipantEntity } from '../../entities/participant.entity';
+import { CampaignEntity, ParticipantEntity } from '../../entities';
 import { ContractService } from '../contracts/contract.service';
+import { JobService, JobType } from '../job';
+import { CampaignStartArgs } from '../job/jobs/campaignStart/types';
+import { Job } from '../../entities/job.entity';
 
 @Injectable()
 export class CampaignService {
@@ -25,6 +28,8 @@ export class CampaignService {
     private readonly accruedHelper: AccruedHelper,
     @Inject(MerkleService)
     private readonly merkleService: MerkleService,
+    @Inject(JobService)
+    private readonly jobService: JobService,
     @Inject(DataSource)
     private readonly dataSource: DataSource,
     @Inject(WINSTON_LOGGER)
@@ -39,7 +44,7 @@ export class CampaignService {
         1,
         '0xc3d688b66703497daa19211eedff47f25384cdc3',
       );
-      const instance = await cometRewards.getInstance();
+      const instance = cometRewards.getInstance();
       await instance.methods
         .getRewardOwed(
           '0xc3d688B66703497DAA19211EEdff47f25384cdc3',
@@ -110,5 +115,32 @@ export class CampaignService {
       });
       throw err;
     }
+  }
+
+  /**
+   * @desc Register and start 'campaign start' job
+   * */
+  async startCampaign(
+    networkId: number,
+    campaignId: number,
+    market: string,
+    blockStart?: number,
+  ): Promise<Job> {
+    // eslint-disable-next-line no-param-reassign
+    blockStart =
+      blockStart || (await this.providerService.getBlockNumber(networkId));
+
+    const args: CampaignStartArgs = {
+      networkId,
+      campaignId,
+      market,
+      blockStart,
+    };
+    const job = await this.jobService.registerJob<CampaignStartArgs>(
+      JobType.CAMPAIGN_START,
+      args,
+    );
+    await this.jobService.startJob(job.id);
+    return job;
   }
 }

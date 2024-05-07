@@ -2,12 +2,12 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Logger } from 'winston';
 import { DataSource } from 'typeorm';
 
-import { AmqpService } from '../../amqp/amqp.service';
+import { AmqpService } from '../../amqp';
 import { Handler } from '../types';
 import { SubgraphTask } from './subgraph';
 import { ResultExchanges, TaskQueues } from '../constants';
 import { WINSTON_LOGGER } from '../../winston/keys';
-import { SubgraphService } from '../../subgraph/subgraph.service';
+import { SubgraphService } from '../../subgraph';
 
 @Injectable()
 export class TaskService {
@@ -17,7 +17,7 @@ export class TaskService {
 
   readonly exchanges: string[] = [];
 
-  private readonly taskHandlers: Handler[];
+  private readonly taskHandlers: Handler[] = [];
 
   constructor(
     @Inject(AmqpService)
@@ -71,6 +71,7 @@ export class TaskService {
       this.dataSource,
       new SubgraphService(this.logger),
     );
+    this.taskHandlers.push(subgraphTaskHandler);
     await subgraphTaskHandler.registerHandler();
   }
 }

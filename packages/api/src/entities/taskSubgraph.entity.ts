@@ -1,8 +1,13 @@
-import { Column, PrimaryColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { SubgraphTaskTypes } from '../modules/job/tasks/subgraph/types';
+import { tables } from '../database/info';
 
-export class TaskHelperSubgraph {
-  @PrimaryColumn()
+@Entity(tables.TASK_SUBGRAPH)
+export class TaskSubgraph {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column()
   jobId: number;
 
   @Column({
@@ -18,4 +23,10 @@ export class TaskHelperSubgraph {
 
   @Column()
   finished: boolean; // is all pages processed?
+
+  @Column()
+  createdAt: Date;
+
+  @Column()
+  updatedAt: Date;
 }

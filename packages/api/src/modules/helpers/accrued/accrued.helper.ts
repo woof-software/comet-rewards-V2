@@ -8,8 +8,8 @@ import {
   AccountAccrued,
   AccountBasicBN,
   AccountBasicStr,
-} from '../../account/account.types';
-import { CalculationService } from '../../calculations/calculation.service';
+} from '../../account/types';
+import { CalculationService } from '../../calculations';
 import { ProcessService } from '../../process/process.service';
 import { ProcessId } from '../../process/process.mapping';
 import { config } from '../../../utils/config';
