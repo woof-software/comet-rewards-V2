@@ -32,6 +32,9 @@ export interface IConfigApp {
     userBasic: {
       maxInstances: number;
     };
+    chainData: {
+      maxInstances: number;
+    };
   };
   networks: {
     [id: number]: {

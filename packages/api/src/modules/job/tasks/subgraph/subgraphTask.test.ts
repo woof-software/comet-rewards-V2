@@ -100,7 +100,7 @@ describe('subgraph.task', () => {
       replace(taskHelper, 'finished', true);
       entityManagerStub.findOne.returns(taskHelper);
 
-      await subgraphTask.getMarketAccounts(1, 1, '', 1);
+      await subgraphTask.getMarketAccounts({ jobId: 1 }, 1, '', 1);
 
       assert.notCalled(subgraphServiceStub.getAccounts);
     });
@@ -130,7 +130,7 @@ describe('subgraph.task', () => {
         }),
       );
 
-      await subgraphTask.getMarketAccounts(jobId, 1, '', 1, 10);
+      await subgraphTask.getMarketAccounts({ jobId }, 1, '', 1, 10);
       expect(entityManagerStub.save.args.length).toEqual(3);
       // eslint-disable-next-line
       // @ts-ignore
@@ -150,7 +150,7 @@ describe('subgraph.task', () => {
       );
 
       try {
-        await subgraphTask.getMarketAccounts(jobId, 1, '', 1, 10);
+        await subgraphTask.getMarketAccounts({ jobId }, 1, '', 1, 10);
         assert.fail('should throw error');
       } catch (err) {
         expect(err.message).toEqual(error);

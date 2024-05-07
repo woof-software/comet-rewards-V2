@@ -6,6 +6,11 @@ import { TaskService } from '../tasks';
 import { Job } from '../../../entities/job.entity';
 import { JobStatus } from '../constants';
 import { JobService } from '../job.service';
+import { ProcessService } from '../../process/process.service';
+import { ProcessId } from '../../process/process.mapping';
+import { config } from '../../../utils/config';
+
+const { maxInstances } = config.getTyped('processes').chainData;
 
 @Injectable()
 export class InitializationService implements OnApplicationBootstrap {
@@ -15,6 +20,7 @@ export class InitializationService implements OnApplicationBootstrap {
     @Inject(TaskService)
     private readonly taskService: TaskService,
     @Inject(JobService) private readonly jobService: JobService,
+    @Inject(ProcessService) private readonly processService: ProcessService,
     @Inject(DataSource) private readonly dataSource: DataSource,
     @Inject(WINSTON_LOGGER)
     mainLogger: Logger,
@@ -38,6 +44,11 @@ export class InitializationService implements OnApplicationBootstrap {
 
     // Initialize task handlers
     await this.taskService.registerTaskHandlers();
+
+    for (let i = 0; i < maxInstances; i += 1) {
+      this.processService.spawnProcess(ProcessId.CHAIN_DATA);
+    }
+
     this.logger.info(`Task handlers initialized`);
   }
 

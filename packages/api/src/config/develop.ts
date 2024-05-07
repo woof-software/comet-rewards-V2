@@ -29,6 +29,9 @@ const config: DeepPartial<IConfigApp> = {
     userBasic: {
       maxInstances: 5,
     },
+    chainData: {
+      maxInstances: 5,
+    },
   },
   networks: {
     1: {

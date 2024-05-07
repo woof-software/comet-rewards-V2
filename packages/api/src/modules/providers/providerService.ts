@@ -1,21 +1,19 @@
-import { Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Logger } from 'winston';
 import { FMT_BYTES, FMT_NUMBER, Web3 } from 'web3';
-import { WINSTON_LOGGER } from '../winston/keys';
 import { IProvidersService } from './types';
 import { config } from '../../utils/config';
+import { mainLogger } from '../winston';
 
 const networks = config.getTyped('networks');
 
+@Injectable()
 export class ProviderService implements IProvidersService {
   private readonly logger: Logger;
 
   private providersRpc: { [id: number]: Web3 } = {};
 
-  constructor(
-    @Inject(WINSTON_LOGGER)
-    mainLogger: Logger,
-  ) {
+  constructor() {
     this.logger = mainLogger.child('provides.service');
   }
 
