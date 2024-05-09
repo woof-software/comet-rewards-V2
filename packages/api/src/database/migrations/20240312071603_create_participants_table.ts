@@ -15,7 +15,8 @@ export async function up(knex: Knex): Promise<void> {
 
       table.string('accruedStart');
       table.string('accruedEnd');
-      table.specificType('proof', 'varchar[]');
+      table.specificType('proofStart', 'varchar[]');
+      table.specificType('proofEnd', 'varchar[]');
 
       table.timestamp('createdAt').notNullable().defaultTo(knex.fn.now());
       table.timestamp('updatedAt').defaultTo(knex.fn.now());

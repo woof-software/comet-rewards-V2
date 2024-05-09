@@ -44,7 +44,10 @@ export class ChainDataTask extends Task {
         }
         default: {
           // TODO: finish job with error
-          this.logger.error('Unknown task type');
+          await this.handleError(
+            headers,
+            'ChainDataTask: Unknown task action type',
+          );
           break;
         }
       }

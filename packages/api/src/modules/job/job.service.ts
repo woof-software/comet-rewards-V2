@@ -8,6 +8,7 @@ import { CampaignStartJob } from './jobs/campaignStart/campaignStart.job';
 import { JobManager } from './types';
 import { AmqpService } from '../amqp';
 import { errors } from './messages';
+import { CampaignEndJob } from './jobs/campaignEnd/campaignEnd.job';
 
 @Injectable()
 export class JobService {
@@ -62,6 +63,17 @@ export class JobService {
     switch (job.type) {
       case JobType.CAMPAIGN_START: {
         manager = new CampaignStartJob(
+          channel,
+          this.dataSource,
+          this.logger,
+          job,
+        );
+
+        await manager.startJob();
+        break;
+      }
+      case JobType.CAMPAIGN_END: {
+        manager = new CampaignEndJob(
           channel,
           this.dataSource,
           this.logger,

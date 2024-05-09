@@ -26,7 +26,13 @@ export class Participant {
     type: 'varchar',
     array: true,
   })
-  proof: string[];
+  proofStart: string[];
+
+  @Column({
+    type: 'varchar',
+    array: true,
+  })
+  proofEnd: string[];
 
   @Column()
   createdAt: Date;

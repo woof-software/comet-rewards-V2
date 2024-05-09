@@ -1,5 +1,6 @@
 export enum JobType {
   CAMPAIGN_START = 'campaign_start',
+  CAMPAIGN_END = 'campaign_end',
 }
 
 export enum JobStatus {

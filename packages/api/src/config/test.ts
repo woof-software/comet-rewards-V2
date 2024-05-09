@@ -111,6 +111,21 @@ const config: DeepPartial<IConfigApp> = {
         cometRewards: '0x123964802e6ababbe1bc9547d72ef1b69b00a6b1',
       },
     },
+    10: {
+      // mainnet
+      rpcURL: process.env.RPC_URL_10,
+      // eslint-disable-next-line max-len
+      subgraphURL: `https://gateway-arbitrum.network.thegraph.com/api/${process.env.SUBGRAPH_API_KEY}/subgraphs/id/5nwMCSHaTqG3Kd2gHznbTXEnZ9QNWsssQfbHhDqQSQFp`,
+      markets: {
+        '0x2e44e174f7d53f0212823acc11c01a11d58c5bcb': {
+          accrualDescaleFactor: new BigNumber(1),
+          baseScale: new BigNumber(1e6),
+        },
+      },
+      contracts: {
+        cometRewards: '0x443EA0340cb75a160F31A440722dec7b5bc3C2E9',
+      },
+    },
   },
 };
 

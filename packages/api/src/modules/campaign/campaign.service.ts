@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { Logger } from 'winston';
 import { DataSource } from 'typeorm';
 
@@ -6,10 +6,10 @@ import { WINSTON_LOGGER } from '../winston/keys';
 import { AccountService } from '../account';
 import { MerkleService } from '../merkle/merkle.service';
 import { ProviderService } from '../providers/providerService';
-import { Campaign, Participant } from '../../entities';
+import { Campaign } from '../../entities';
 import { ContractService } from '../contracts/contract.service';
 import { JobService, JobType } from '../job';
-import { CampaignStartArgs } from '../job/jobs/campaignStart/types';
+import { CampaignEndArgs } from '../job/jobs/campaignStart/types';
 import { Job } from '../../entities/job.entity';
 import { CampaignJob } from '../../entities/campaignJob.entity';
 
@@ -55,44 +55,15 @@ export class CampaignService {
     }
   }
 
-  async startNew(networkId: number, market: string, blockStart?: number) {
-    try {
-      // 1. fix block number, timestamp
-      // eslint-disable-next-line no-param-reassign
-      blockStart =
-        blockStart || (await this.providerService.getBlockNumber(networkId));
+  async getCampaigns() {
+    return this.dataSource.manager.find(Campaign);
+  }
 
-      const campaign = new Campaign();
-      campaign.market = market.toLowerCase();
-      campaign.blockStart = blockStart;
-      await this.dataSource.manager.save(campaign);
-
-      // 4. Generate tree from accrued accounts
-      const tree = this.merkleService.generateTree([]);
-
-      // TODO: rework
-      // eslint-disable-next-line no-restricted-syntax
-      for (const [i, v] of tree.entries()) {
-        const proof = tree.getProof(i);
-        const participant = new Participant();
-        participant.campaignId = campaign.id;
-        [participant.address, participant.accruedStart] = v;
-        participant.proof = proof;
-
-        await this.dataSource.manager.save(participant);
-      }
-
-      campaign.treeRootStart = tree.root;
-      await this.dataSource.manager.save(campaign);
-
-      return campaign;
-    } catch (err) {
-      this.logger.error(err.message, {
-        function: 'startNew',
-        args: { market, blockStart },
-      });
-      throw err;
-    }
+  async getCampaignMerkle(id: number) {
+    return this.dataSource.manager.findOne(Campaign, {
+      where: { id },
+      relations: ['participants'],
+    });
   }
 
   /**
@@ -118,15 +89,59 @@ export class CampaignService {
     }
     await this.dataSource.manager.save(campaign);
 
-    const args: CampaignStartArgs = {
+    const args: CampaignEndArgs = {
       networkId,
       campaignId: campaign.id,
-      market,
+      market: market.toLowerCase(),
       blockNumber,
     };
 
-    const job = await this.jobService.registerJob<CampaignStartArgs>(
+    const job = await this.jobService.registerJob<CampaignEndArgs>(
       JobType.CAMPAIGN_START,
+      args,
+    );
+
+    // TODO: avoid accidentally repeating jobs
+    const campaignJob = new CampaignJob();
+    campaignJob.campaignId = campaign.id;
+    campaignJob.jobId = job.id;
+    await this.dataSource.manager.save(campaignJob);
+
+    await this.jobService.startJob(job.id);
+    return job;
+  }
+
+  /**
+   * @desc Register and start 'campaign end' job
+   * */
+  async endCampaign(campaignId: number, blockNumber?: number): Promise<Job> {
+    const campaign = await this.dataSource.manager.findOne(Campaign, {
+      where: { id: campaignId },
+    });
+    if (!campaign) {
+      throw new HttpException(
+        `no campaign in progress with id: ${campaignId}`,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    // eslint-disable-next-line no-param-reassign
+    blockNumber =
+      blockNumber ||
+      (await this.providerService.getBlockNumber(campaign.networkId));
+
+    campaign.blockEnd = blockNumber;
+    await this.dataSource.manager.save(campaign);
+
+    const args: CampaignEndArgs = {
+      networkId: campaign.networkId,
+      campaignId,
+      market: campaign.market.toLowerCase(),
+      blockNumber,
+    };
+
+    const job = await this.jobService.registerJob<CampaignEndArgs>(
+      JobType.CAMPAIGN_END,
       args,
     );
 

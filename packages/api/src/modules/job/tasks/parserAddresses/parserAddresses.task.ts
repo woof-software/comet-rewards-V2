@@ -39,6 +39,7 @@ export class ParserAddressesTask extends Task {
             fromBlock: LessThanOrEqual(data.blockNumber),
             contractAddress: data.market,
           },
+          take: 10,
         }),
       };
 

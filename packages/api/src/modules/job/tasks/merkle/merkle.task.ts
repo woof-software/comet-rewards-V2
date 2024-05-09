@@ -1,5 +1,6 @@
 import { Channel } from 'amqplib';
 import { DataSource } from 'typeorm';
+import * as fs from 'node:fs';
 import { Task } from '../task/task';
 import { mainLogger } from '../../../winston';
 import { MerkleTaskMessage, MerkleTaskResult } from './types';
@@ -7,6 +8,9 @@ import { MessageHeaders } from '../../types';
 import { exchanges, queues } from '../../../amqp/constants';
 import { MerkleService } from '../../../merkle/merkle.service';
 import { tables } from '../../../../database/info';
+import { MERKLE_DIR } from '../../../../common/constants';
+import { createDirIfNotExists } from '../../../../utils/utils';
+import { Participant } from '../../../../entities';
 
 export class MerkleTask extends Task {
   constructor(
@@ -42,6 +46,30 @@ export class MerkleTask extends Task {
 
       const tree = this.merkleService.generateTree(participants);
 
+      await createDirIfNotExists(`./${MERKLE_DIR}`);
+      await new Promise((resolve) => {
+        fs.writeFile(
+          `./${MERKLE_DIR}/campaign_${data.campaignId}_${data.type}.json`,
+          JSON.stringify(tree.dump()),
+          resolve,
+        );
+      });
+
+      for (let i = 0; i < participants.length; i++) {
+        const proof = tree.getProof(i);
+        await this.dataSource.manager.update(
+          Participant,
+          {
+            campaignId: data.campaignId,
+            networkId: data.networkId,
+            address: participants[i][0],
+          },
+          {
+            [data.type === 'start' ? 'proofStart' : 'proofEnd']: proof,
+          },
+        );
+      }
+
       const message: MerkleTaskResult = {
         root: tree.root,
       };
@@ -56,8 +84,8 @@ export class MerkleTask extends Task {
       this.channel.ack(msg);
     } catch (err) {
       this.logger.error(err.message);
-      // await this.handleError(headers, err.message);
-      // this.channel.ack(msg);
+      await this.handleError(headers, err.message);
+      this.channel.ack(msg);
     }
   }
 
