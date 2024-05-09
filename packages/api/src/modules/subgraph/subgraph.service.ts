@@ -20,7 +20,7 @@ export class SubgraphService {
     market: string,
     blockNumber: number,
     skip = 0,
-    first = 100,
+    first = 1000,
   ): Promise<any> {
     return execute(
       networkId,

@@ -1,43 +1,66 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { ProvidersModule } from '../providers';
-import { ContractsModule } from '../contracts/contracts.module';
-import { AccountModule } from '../account';
-import { WinstonModule } from '../winston';
+import '../../utils/test-helper.test';
+import { assert, createStubInstance } from 'sinon';
 import { CampaignService } from './campaign.service';
-import { SubgraphModule } from '../subgraph';
-import { MerkleModule } from '../merkle';
+import { JobService, JobType } from '../job';
+import { AccountService } from '../account';
+import { ProviderService } from '../providers/providerService';
+import { ContractService } from '../contracts/contract.service';
+import { AccruedHelper } from '../helpers/accrued/accrued.helper';
+import { MerkleService } from '../merkle/merkle.service';
+import { getDataSourceStubs } from '../../utils/stubs.test';
+import { mainLogger } from '../winston';
+import { Job } from '../../entities/job.entity';
 
 describe('campaign.service', () => {
-  let moduleRef: TestingModule;
-
   let campaignService: CampaignService;
 
-  beforeAll(async () => {
-    moduleRef = await Test.createTestingModule({
-      imports: [
-        WinstonModule,
-        ProvidersModule,
-        ContractsModule,
-        AccountModule,
-        SubgraphModule,
-        MerkleModule,
-      ],
-      providers: [CampaignService],
-    }).compile();
+  const { dataSourceStub } = getDataSourceStubs();
 
-    campaignService = moduleRef.get(CampaignService);
+  const accountServiceStub = createStubInstance(AccountService);
+  const providerServiceStub = createStubInstance(ProviderService);
+  const contractServiceStub = createStubInstance(ContractService);
+  const accruedHelperStub = createStubInstance(AccruedHelper);
+  const merkleServiceStub = createStubInstance(MerkleService);
+  const jobServiceStub = createStubInstance(JobService);
+
+  beforeAll(async () => {
+    campaignService = new CampaignService(
+      accountServiceStub,
+      providerServiceStub,
+      contractServiceStub,
+      accruedHelperStub,
+      merkleServiceStub,
+      jobServiceStub,
+      dataSourceStub,
+      mainLogger,
+    );
   });
 
-  describe('startNew', () => {
-    const market = '0xc3d688b66703497daa19211eedff47f25384cdc3';
+  describe('startCampaign', () => {
+    it('should register and start the job', async () => {
+      const networkId = 1;
+      const campaignId = 1;
+      const market = 'market';
+      const blockStart = 10;
 
-    it('should be ok', async () => {
-      try {
-        const res = await campaignService.startNew(1, market);
-        console.log(res);
-      } catch (err) {
-        console.log();
-      }
+      providerServiceStub.getBlockNumber.returns(Promise.resolve(blockStart));
+
+      const job = new Job();
+      job.id = 11;
+      jobServiceStub.registerJob.returns(Promise.resolve(job));
+
+      const res = await campaignService.startCampaign(
+        networkId,
+        campaignId,
+        market,
+      );
+      expect(res.id).toEqual(job.id);
+      assert.calledOnceWithExactly(
+        jobServiceStub.registerJob,
+        JobType.CAMPAIGN_START,
+        { networkId, campaignId, market, blockStart },
+      );
+      assert.calledOnceWithExactly(jobServiceStub.startJob, job.id);
     });
   });
 });

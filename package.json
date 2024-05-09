@@ -8,21 +8,17 @@
     "docker-dev": "cd packages/ && docker compose down && docker compose up -d --build",
     "docker-dev-down": "cd packages/ && docker compose down --remove-orphans",
     "docker-dev-logs": "cd packages/ && docker compose logs -f",
-    "docker-dev-clean-devdb": "cd packages/ && docker compose down && docker volume rm eco-api-dev",
-    "docker-dev-clean-testdb": "cd packages/ && docker compose down && docker volume rm eco-api-test",
-    "migrate": "lerna run migrate",
-    "seed": "lerna run seed",
-    "build": "lerna run build",
+    "docker-dev-clean-devdb": "cd packages/ && docker compose down && docker volume rm cr-api-dev",
+    "docker-dev-clean-testdb": "cd packages/ && docker compose down && docker volume rm cr-api-test",
     "lint": "nopenv pre-commit run -a",
     "clean-pre-commit": "nopenv pre-commit clean",
     "install": "husky-init & npip install",
     "prepare": "husky install",
-    "postinstall": "lerna bootstrap",
     "nopy": "nopy",
     "npip": "npip"
   },
   "engines": {
-    "node": ">= 16"
+    "node": ">= 20"
   },
   "python": {
     "execPath": "python3",
@@ -50,11 +46,11 @@
     "eslint-plugin-jest": "^26.8.7",
     "eslint-plugin-json": "^3.1.0",
     "eslint-plugin-prettier": "^4.2.1",
-    "husky": "^8.0.1",
-    "lerna": "^5.4.3",
     "lint-staged": "^13.0.3",
     "nopy": "^0.2.8",
     "typescript": "^5.3.3"
   },
-  "dependencies": {}
+  "dependencies": {
+    "husky": "^9.0.11"
+  }
 }

@@ -7,10 +7,12 @@ export async function up(knex: Knex): Promise<void> {
     .createTable('campaigns', (table) => {
       table.increments();
 
+      table.integer('networkId').notNullable();
       table.string('market').notNullable();
       table.integer('blockStart').notNullable();
       table.integer('blockEnd');
-      table.string('treeRoot');
+      table.string('treeRootStart');
+      table.string('treeRootEnd');
 
       table.timestamp('createdAt').notNullable().defaultTo(knex.fn.now());
       table.timestamp('updatedAt').defaultTo(knex.fn.now());

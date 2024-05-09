@@ -14,9 +14,13 @@ export class MerkleService {
     this.logger = mainLogger.child({ scope: 'merkle.service' });
   }
 
-  generateTree(accountsPrepared: [string, string][]) {
+  generateTree(accountsPrepared: [string, string, number][]) {
     try {
-      return StandardMerkleTree.of(accountsPrepared, ['address', 'uint256']);
+      return StandardMerkleTree.of(accountsPrepared, [
+        'address',
+        'uint256',
+        'uint256',
+      ]);
     } catch (err) {
       this.logger.error(err.message, { function: 'generateTree' });
       throw err;

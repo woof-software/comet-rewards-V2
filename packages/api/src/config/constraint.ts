@@ -32,6 +32,9 @@ export interface IConfigApp {
     userBasic: {
       maxInstances: number;
     };
+    chainData: {
+      maxInstances: number;
+    };
   };
   networks: {
     [id: number]: {
@@ -42,6 +45,9 @@ export interface IConfigApp {
           accrualDescaleFactor: BigNumber;
           baseScale: BigNumber;
         };
+      };
+      contracts: {
+        cometRewards: string;
       };
     };
   };

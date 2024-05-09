@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Logger } from 'winston';
 import { WINSTON_LOGGER } from '../winston/keys';
-import { SubgraphService } from '../subgraph/subgraph.service';
-import { Account } from './account.types';
+import { SubgraphService } from '../subgraph';
+import { Account } from './types';
 
 @Injectable()
 export class AccountService {

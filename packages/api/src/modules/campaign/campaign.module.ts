@@ -7,19 +7,18 @@ import { ContractsModule } from '../contracts/contracts.module';
 import { SubgraphModule } from '../subgraph';
 import { MerkleModule } from '../merkle';
 import { ProvidersModule } from '../providers';
-import { HelperModule } from '../helpers/helper.module';
-import { CampaignModel } from '../../models';
-import { ParticipantModel } from '../../models/participant.model';
+import { Campaign, Participant } from '../../entities';
+import { JobModule } from '../job';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([CampaignModel, ParticipantModel]),
+    TypeOrmModule.forFeature([Campaign, Participant]),
     AccountModule,
     ContractsModule,
     SubgraphModule,
     MerkleModule,
     ProvidersModule,
-    HelperModule,
+    JobModule,
   ],
   controllers: [CampaignController],
   providers: [CampaignService],

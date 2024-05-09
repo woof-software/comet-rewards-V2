@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ProviderService } from '../providers/providerService';
-import { Contracts } from './contract.types';
 import { CometContract } from './comet/Comet.contract';
+import { CometRewardsContract } from './cometReward/cometRewards.contract';
 
 @Injectable()
 export class ContractService {
@@ -10,20 +10,19 @@ export class ContractService {
     private readonly providerService: ProviderService,
   ) {}
 
-  async getInstance(
-    contract: Contracts,
+  async getCometContract(
     networkId: number,
     market: string,
   ): Promise<CometContract> {
     const providerRPC = await this.providerService.getProviderRPC(networkId);
+    return new CometContract(providerRPC, market);
+  }
 
-    switch (contract) {
-      case Contracts.COMET: {
-        return new CometContract(providerRPC, market);
-      }
-      default: {
-        throw new Error(`Contract wrapper not defined for ${contract}`);
-      }
-    }
+  async getCometRewardsContract(
+    networkId: number,
+    market: string,
+  ): Promise<CometRewardsContract> {
+    const providerRPC = await this.providerService.getProviderRPC(networkId);
+    return new CometRewardsContract(providerRPC, networkId, market);
   }
 }
