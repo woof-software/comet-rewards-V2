@@ -6,9 +6,13 @@ export async function up(knex: Knex): Promise<void> {
     .withSchema('public')
     .createTable('participants', (table) => {
       table.increments();
-      table.integer('campaignId').references('campaigns.id').notNullable();
 
+      table.integer('campaignId').references('campaigns.id').notNullable();
+      table.integer('networkId').notNullable();
       table.string('address').notNullable();
+
+      table.unique(['campaignId', 'networkId', 'address']);
+
       table.string('accruedStart');
       table.string('accruedEnd');
       table.specificType('proof', 'varchar[]');

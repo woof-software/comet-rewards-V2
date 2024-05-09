@@ -45,6 +45,7 @@ module.exports = {
     'import/named': 'off',
     'import/extensions': 'off',
     'no-empty-function': 'off',
+    'no-plusplus': 'off',
     'prefer-promise-reject-errors': 'off',
     'implicit-arrow-linebreak': 'off',
     'function-paren-newline': 'off',

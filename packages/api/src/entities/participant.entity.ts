@@ -1,11 +1,14 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { tables } from '../database/info';
-import { CampaignEntity } from './campaign.entity';
+import { Campaign } from './campaign.entity';
 
 @Entity(tables.PARTICIPANTS)
-export class ParticipantEntity {
+export class Participant {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @Column()
+  networkId: number;
 
   @Column()
   campaignId: number;
@@ -31,6 +34,6 @@ export class ParticipantEntity {
   @Column()
   updatedAt: Date;
 
-  @ManyToOne(() => CampaignEntity, (campaign) => campaign.participants)
-  campaign: CampaignEntity;
+  @ManyToOne(() => Campaign, (campaign) => campaign.participants)
+  campaign: Campaign;
 }

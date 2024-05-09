@@ -4,7 +4,7 @@ import { Logger } from 'winston';
 import { Job } from '../../entities/job.entity';
 import { JobStatus, JobType } from './constants';
 import { WINSTON_LOGGER } from '../winston/keys';
-import { CampaignStartManager } from './jobs/campaignStart/campaignStart.manager';
+import { CampaignStartJob } from './jobs/campaignStart/campaignStart.job';
 import { JobManager } from './types';
 import { AmqpService } from '../amqp';
 import { errors } from './messages';
@@ -61,7 +61,7 @@ export class JobService {
     let manager: JobManager;
     switch (job.type) {
       case JobType.CAMPAIGN_START: {
-        manager = new CampaignStartManager(
+        manager = new CampaignStartJob(
           channel,
           this.dataSource,
           this.logger,

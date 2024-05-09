@@ -1,6 +1,5 @@
 import { Channel, Message } from 'amqplib';
 import { Logger } from 'winston';
-import { ResultExchanges, TaskQueues } from '../../constants';
 import { Handler } from '../../types';
 import { errors } from './messages';
 
@@ -12,16 +11,16 @@ export class Task implements Handler {
 
   readonly channel: Channel;
 
-  readonly queueName: TaskQueues;
+  readonly queueName: string;
 
-  readonly resultExchange: ResultExchanges;
+  readonly resultExchange: string;
 
   protected consumerTag_: string;
 
   constructor(
     channel: Channel,
-    queueName: TaskQueues,
-    resultExchange: ResultExchanges,
+    queueName: string,
+    resultExchange: string,
     logger: Logger,
   ) {
     this.logger = logger;

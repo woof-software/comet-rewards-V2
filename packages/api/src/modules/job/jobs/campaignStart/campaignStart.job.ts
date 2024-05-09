@@ -4,20 +4,15 @@ import { DataSource } from 'typeorm';
 
 import { Job } from '../../../../entities/job.entity';
 import { JobManager, MessageHeaders, StageHandler } from '../../types';
-import { SubgraphAccountStage } from './stages/subgraphAccount';
-import {
-  COMPLETION_EXCHANGE,
-  JobStatus,
-  ResultExchanges,
-  TaskQueues,
-} from '../../constants';
-import {
-  SubgraphTaskMessage,
-  SubgraphTaskTypes,
-} from '../../tasks/subgraph/types';
+import { JobStatus } from '../../constants';
 import { CompletionStage } from './stages/completion/completion.stage';
+import { exchanges, queues } from '../../../amqp/constants';
+import { ParserAddressesStage } from './stages/parserAddresses/parserAddresses.stage';
+import { AccountAccruedStage } from './stages/accountAccrued/accountAccrued.stage';
+import { ParserAddressesTaskMessage } from '../../tasks/parserAddresses/types';
+import { MerkleStage } from './stages/merkle/merkle.stage';
 
-export class CampaignStartManager implements JobManager {
+export class CampaignStartJob implements JobManager {
   private readonly logger: Logger;
 
   job: Job;
@@ -47,8 +42,7 @@ export class CampaignStartManager implements JobManager {
     }
 
     if (this.job.status === JobStatus.REGISTERED) {
-      const message: SubgraphTaskMessage = {
-        type: SubgraphTaskTypes.MARKET_ACCOUNTS,
+      const message: ParserAddressesTaskMessage = {
         networkId: this.job.args.networkId,
         market: this.job.args.market,
         blockNumber: this.job.args.blockNumber,
@@ -56,7 +50,7 @@ export class CampaignStartManager implements JobManager {
       const headers: MessageHeaders = { jobId: this.job.id };
 
       this.channel.sendToQueue(
-        TaskQueues.SUBGRAPH,
+        queues.task.PARSER_ADDRESSES,
         Buffer.from(JSON.stringify(message)),
         { headers },
       );
@@ -69,23 +63,41 @@ export class CampaignStartManager implements JobManager {
   }
 
   private async registerStageHandlers() {
-    const subgraphAccountStage = new SubgraphAccountStage(
+    const parserAddressesStage = new ParserAddressesStage(
       this.channel,
-      ResultExchanges.SUBGRAPH,
+      exchanges.result.PARSER_ADDRESSES,
       this.job,
     );
-    this.stageHandlers.push(subgraphAccountStage);
-    await subgraphAccountStage.registerHandler();
+    this.stageHandlers.push(parserAddressesStage);
+    await parserAddressesStage.registerHandler();
+
+    const accountAccruedStage = new AccountAccruedStage(
+      this.channel,
+      exchanges.result.CHAIN_DATA,
+      this.job,
+      this.dataSource,
+    );
+    this.stageHandlers.push(accountAccruedStage);
+    await accountAccruedStage.registerHandler();
+
+    const merkleStage = new MerkleStage(
+      this.channel,
+      exchanges.result.MERKLE,
+      this.job,
+      this.dataSource,
+    );
+    this.stageHandlers.push(merkleStage);
+    await merkleStage.registerHandler();
   }
 
   private async registerCompletionHandler() {
-    await this.channel.assertExchange(COMPLETION_EXCHANGE, 'headers', {
+    await this.channel.assertExchange(exchanges.COMPLETION, 'headers', {
       durable: true,
     });
 
     this.completionHandler = new CompletionStage(
       this.channel,
-      COMPLETION_EXCHANGE,
+      exchanges.COMPLETION,
       this.job,
       this.stageHandlers,
       this.dataSource,

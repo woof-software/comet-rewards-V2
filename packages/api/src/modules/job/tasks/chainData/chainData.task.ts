@@ -1,37 +1,34 @@
 import { Channel } from 'amqplib';
 import { DataSource } from 'typeorm';
 import { Logger } from 'winston';
-import { ResultExchanges, TaskQueues } from '../../constants';
 import { Task } from '../task/task';
 import {
   ChainDataTaskMessage,
   ChainDataTaskResult,
   ChainDataTaskType,
 } from './types';
-import { SubgraphService } from '../../../subgraph';
 import { MessageHeaders } from '../../types';
 import { ProviderService } from '../../../providers/providerService';
 import { CometRewardsContract } from '../../../contracts/cometReward/cometRewards.contract';
+import { exchanges, queues } from '../../../amqp/constants';
+import { TokenBucketService } from '../../../tokenBucket/tokenBucket.service';
 
 export class ChainDataTask extends Task {
   private readonly dataSource: DataSource;
 
-  private readonly subgraphService: SubgraphService;
-
   constructor(
     channel: Channel,
     private readonly providerService: ProviderService,
+    private readonly tokenBucketService: TokenBucketService,
     mainLogger: Logger,
   ) {
-    const logger = mainLogger;
-    super(channel, TaskQueues.CHAIN_DATA, ResultExchanges.CHAIN_DATA, logger);
+    const logger = mainLogger.child({ scope: 'chainData.task' });
+    super(channel, queues.task.CHAIN_DATA, exchanges.result.CHAIN_DATA, logger);
   }
 
   async handler(msg) {
     const headers = <MessageHeaders>msg.properties.headers;
     try {
-      this.logger.info('task handler consumed');
-
       const data: ChainDataTaskMessage = JSON.parse(msg.content.toString());
 
       switch (data.type) {
@@ -75,9 +72,12 @@ export class ChainDataTask extends Task {
         market,
       ).getInstance();
 
+      const token = await this.tokenBucketService.consumeToken();
+      this.logger.info(`consumed ${token}`);
       const result: any = await cometRewards.methods
         .getRewardOwed(market, address)
         .call({}, blockNumber);
+      this.logger.info(`received result ${token}`);
 
       const message: ChainDataTaskResult = {
         address,

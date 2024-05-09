@@ -27,8 +27,8 @@ export class CampaignController {
   ): Promise<Job> {
     return this.campaignService.startCampaign(
       networkId,
-      campaignId,
       market,
+      campaignId,
       blockStart,
     );
   }

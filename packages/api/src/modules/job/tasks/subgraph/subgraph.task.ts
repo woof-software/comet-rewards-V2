@@ -1,6 +1,5 @@
 import { Channel } from 'amqplib';
 import { DataSource } from 'typeorm';
-import { ResultExchanges, TaskQueues } from '../../constants';
 import { Task } from '../task/task';
 import { mainLogger } from '../../../winston';
 import {
@@ -11,6 +10,7 @@ import {
 import { TaskSubgraph } from '../../../../entities';
 import { SubgraphService } from '../../../subgraph';
 import { MessageHeaders } from '../../types';
+import { exchanges, queues } from '../../../amqp/constants';
 
 export class SubgraphTask extends Task {
   private readonly dataSource: DataSource;
@@ -23,7 +23,7 @@ export class SubgraphTask extends Task {
     subgraphService: SubgraphService,
   ) {
     const logger = mainLogger.child({ scope: 'subgraph.task' });
-    super(channel, TaskQueues.SUBGRAPH, ResultExchanges.SUBGRAPH, logger);
+    super(channel, queues.task.SUBGRAPH, exchanges.result.SUBGRAPH, logger);
     this.dataSource = dataSource;
     this.subgraphService = subgraphService;
   }

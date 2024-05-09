@@ -73,5 +73,8 @@ export class CompletionStage implements StageHandler {
 
     this.job.status = this.job.error ? JobStatus.FAILED : JobStatus.COMPLETED;
     await this.dataSource.manager.save(this.job);
+    this.logger.info(
+      `Job ${this.job.id} completed. status: ${this.job.status}`,
+    );
   }
 }

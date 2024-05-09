@@ -4,12 +4,14 @@ import { DataSource } from 'typeorm';
 
 import { AmqpService } from '../../amqp';
 import { Handler } from '../types';
-import { SubgraphTask } from './subgraph';
-import { ResultExchanges, TaskQueues } from '../constants';
 import { WINSTON_LOGGER } from '../../winston/keys';
-import { SubgraphService } from '../../subgraph';
 import { ChainDataTask } from './chainData/chainData.task';
 import { ProviderService } from '../../providers/providerService';
+import { exchanges, queues } from '../../amqp/constants';
+import { TokenBucketService } from '../../tokenBucket/tokenBucket.service';
+import { ParserAddressesTask } from './parserAddresses/parserAddresses.task';
+import { MerkleTask } from './merkle/merkle.task';
+import { MerkleService } from '../../merkle/merkle.service';
 
 @Injectable()
 export class TaskService {
@@ -25,6 +27,9 @@ export class TaskService {
     @Inject(AmqpService)
     private readonly amqpService: AmqpService,
     @Inject(ProviderService) private readonly providerService: ProviderService,
+    @Inject(TokenBucketService)
+    private readonly tokenBucket: TokenBucketService,
+    @Inject(MerkleService) private readonly merkleService: MerkleService,
     @Inject(DataSource)
     private readonly dataSource: DataSource,
     @Inject(WINSTON_LOGGER)
@@ -40,7 +45,7 @@ export class TaskService {
     const channel = await this.amqpService.getChannel();
 
     // eslint-disable-next-line no-restricted-syntax
-    for (const taskQueue of Object.values(TaskQueues)) {
+    for (const taskQueue of Object.values(queues.task)) {
       const { queue } = await channel.assertQueue(taskQueue, {
         durable: true,
       });
@@ -55,7 +60,7 @@ export class TaskService {
     const channel = await this.amqpService.getChannel();
 
     // eslint-disable-next-line no-restricted-syntax
-    for (const resultExchange of Object.values(ResultExchanges)) {
+    for (const resultExchange of Object.values(exchanges.result)) {
       const { exchange } = await channel.assertExchange(
         resultExchange,
         'headers',
@@ -70,20 +75,28 @@ export class TaskService {
   async registerTaskHandlers() {
     const channel = await this.amqpService.getChannel();
 
-    const subgraphTaskHandler = new SubgraphTask(
+    const parserAddressesTask = new ParserAddressesTask(
       channel,
       this.dataSource,
-      new SubgraphService(this.logger),
     );
-    this.taskHandlers.push(subgraphTaskHandler);
-    await subgraphTaskHandler.registerHandler();
+    this.taskHandlers.push(parserAddressesTask);
+    await parserAddressesTask.registerHandler();
 
     const chainDataTaskHandler = new ChainDataTask(
       channel,
       this.providerService,
+      this.tokenBucket,
       this.logger,
     );
     this.taskHandlers.push(chainDataTaskHandler);
     await chainDataTaskHandler.registerHandler();
+
+    const merkleTask = new MerkleTask(
+      channel,
+      this.merkleService,
+      this.dataSource,
+    );
+    this.taskHandlers.push(merkleTask);
+    await merkleTask.registerHandler();
   }
 }

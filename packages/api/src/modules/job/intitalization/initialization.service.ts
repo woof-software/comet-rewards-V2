@@ -38,7 +38,6 @@ export class InitializationService implements OnApplicationBootstrap {
 
     // Initialize task handlers
     await this.taskService.registerTaskHandlers();
-
     this.logger.info(`Task handlers initialized`);
   }
 

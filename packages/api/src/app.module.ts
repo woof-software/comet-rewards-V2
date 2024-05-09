@@ -6,6 +6,7 @@ import { TypeOrmConfig } from './database/ormconfig';
 import { WinstonModule } from './modules/winston';
 import { CampaignModule } from './modules/campaign';
 import { InitializationModule } from './modules/job/intitalization';
+import { TokenBucketModule } from './modules/tokenBucket/tokenBucket.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { InitializationModule } from './modules/job/intitalization';
     WinstonModule,
 
     /* Main modules */
+    TokenBucketModule,
     InitializationModule,
     CampaignModule,
   ],

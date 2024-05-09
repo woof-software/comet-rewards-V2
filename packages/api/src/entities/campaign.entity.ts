@@ -1,11 +1,14 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { tables } from '../database/info';
-import { ParticipantEntity } from './participant.entity';
+import { Participant } from './participant.entity';
 
 @Entity(tables.CAMPAIGNS)
-export class CampaignEntity {
+export class Campaign {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @Column()
+  networkId: number;
 
   @Column()
   market: string;
@@ -17,7 +20,10 @@ export class CampaignEntity {
   blockEnd: number;
 
   @Column()
-  treeRoot: string;
+  treeRootStart: string;
+
+  @Column()
+  treeRootEnd: string;
 
   @Column()
   createdAt: Date;
@@ -25,6 +31,6 @@ export class CampaignEntity {
   @Column()
   updatedAt: Date;
 
-  @OneToMany(() => ParticipantEntity, (participant) => participant.campaign)
-  participants: ParticipantEntity[];
+  @OneToMany(() => Participant, (participant) => participant.campaign)
+  participants: Participant[];
 }

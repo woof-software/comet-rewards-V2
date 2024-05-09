@@ -6,11 +6,12 @@ import { WINSTON_LOGGER } from '../winston/keys';
 import { AccountService } from '../account';
 import { MerkleService } from '../merkle/merkle.service';
 import { ProviderService } from '../providers/providerService';
-import { CampaignEntity, ParticipantEntity } from '../../entities';
+import { Campaign, Participant } from '../../entities';
 import { ContractService } from '../contracts/contract.service';
 import { JobService, JobType } from '../job';
 import { CampaignStartArgs } from '../job/jobs/campaignStart/types';
 import { Job } from '../../entities/job.entity';
+import { CampaignJob } from '../../entities/campaignJob.entity';
 
 @Injectable()
 export class CampaignService {
@@ -61,7 +62,7 @@ export class CampaignService {
       blockStart =
         blockStart || (await this.providerService.getBlockNumber(networkId));
 
-      const campaign = new CampaignEntity();
+      const campaign = new Campaign();
       campaign.market = market.toLowerCase();
       campaign.blockStart = blockStart;
       await this.dataSource.manager.save(campaign);
@@ -73,7 +74,7 @@ export class CampaignService {
       // eslint-disable-next-line no-restricted-syntax
       for (const [i, v] of tree.entries()) {
         const proof = tree.getProof(i);
-        const participant = new ParticipantEntity();
+        const participant = new Participant();
         participant.campaignId = campaign.id;
         [participant.address, participant.accruedStart] = v;
         participant.proof = proof;
@@ -81,7 +82,7 @@ export class CampaignService {
         await this.dataSource.manager.save(participant);
       }
 
-      campaign.treeRoot = tree.root;
+      campaign.treeRootStart = tree.root;
       await this.dataSource.manager.save(campaign);
 
       return campaign;
@@ -99,24 +100,42 @@ export class CampaignService {
    * */
   async startCampaign(
     networkId: number,
-    campaignId: number,
     market: string,
+    campaignId?: number | null,
     blockNumber?: number,
   ): Promise<Job> {
     // eslint-disable-next-line no-param-reassign
     blockNumber =
       blockNumber || (await this.providerService.getBlockNumber(networkId));
 
+    const campaign = new Campaign();
+    campaign.networkId = networkId;
+    campaign.market = market.toLowerCase();
+    campaign.blockStart = blockNumber;
+
+    if (campaignId) {
+      campaign.id = +campaignId;
+    }
+    await this.dataSource.manager.save(campaign);
+
     const args: CampaignStartArgs = {
       networkId,
-      campaignId,
+      campaignId: campaign.id,
       market,
       blockNumber,
     };
+
     const job = await this.jobService.registerJob<CampaignStartArgs>(
       JobType.CAMPAIGN_START,
       args,
     );
+
+    // TODO: avoid accidentally repeating jobs
+    const campaignJob = new CampaignJob();
+    campaignJob.campaignId = campaign.id;
+    campaignJob.jobId = job.id;
+    await this.dataSource.manager.save(campaignJob);
+
     await this.jobService.startJob(job.id);
     return job;
   }
