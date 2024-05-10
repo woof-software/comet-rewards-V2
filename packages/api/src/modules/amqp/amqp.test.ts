@@ -2,7 +2,6 @@ import '../../utils/test-helper.test';
 import { Test, TestingModule } from '@nestjs/testing';
 import { mainLogger, WinstonModule } from '../winston';
 
-import { Amqp } from './amqp';
 import { AmqpService } from './amqp.service';
 
 describe('amqp', () => {
@@ -21,7 +20,7 @@ describe('amqp', () => {
         };
       });
 
-      const amqpService = new Amqp(mainLogger);
+      const amqpService = new AmqpService(mainLogger);
 
       const channel = await amqpService.getChannel();
       console.log(channel);

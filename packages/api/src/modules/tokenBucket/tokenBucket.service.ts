@@ -1,11 +1,13 @@
 import { Inject, Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { Logger } from 'winston';
 import { Channel } from 'amqplib';
+
 import { mainLogger } from '../winston';
 import { AmqpService } from '../amqp';
 import { queues } from '../amqp/constants';
+import { config } from '../../utils/config';
 
-const rps = 5;
+const chainDataConfig = config.getTyped('chainData');
 
 @Injectable()
 export class TokenBucketService implements OnApplicationBootstrap {
@@ -19,27 +21,20 @@ export class TokenBucketService implements OnApplicationBootstrap {
 
   async onApplicationBootstrap() {
     this.channel = await this.amqpService.createChannel();
-    await this.channel.prefetch(1);
     await this.channel.assertQueue(queues.TOKEN_BUCKET, {
-      arguments: { 'x-max-length': rps },
       durable: false,
+      maxLength: chainDataConfig.rps,
+      arguments: { 'x-overflow': 'reject-publish' },
     });
 
     setInterval(() => {
-      console.log('supply');
       this.supplyTokens();
-    }, 2000);
+    }, 1000);
   }
 
   supplyTokens() {
-    for (let i = 0; i < 1; i++) {
-      try {
-        this.channel.sendToQueue(queues.TOKEN_BUCKET, Buffer.from(''), {
-          messageId: i.toString(),
-        });
-      } catch (err) {
-        console.log(err);
-      }
+    for (let i = 0; i < chainDataConfig.rps; i++) {
+      this.channel.sendToQueue(queues.TOKEN_BUCKET, Buffer.from(''));
     }
   }
 
@@ -49,11 +44,9 @@ export class TokenBucketService implements OnApplicationBootstrap {
         queues.TOKEN_BUCKET,
         async (msg) => {
           await this.channel.cancel(msg.fields.consumerTag);
-          const id = msg.properties.messageId;
-          this.channel.ack(msg);
-          resolve(id);
+          resolve(true);
         },
-        { noAck: false },
+        { noAck: true },
       );
     });
   }

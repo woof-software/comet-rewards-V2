@@ -12,6 +12,9 @@ import { TokenBucketService } from '../../tokenBucket/tokenBucket.service';
 import { ParserAddressesTask } from './parserAddresses/parserAddresses.task';
 import { MerkleTask } from './merkle/merkle.task';
 import { MerkleService } from '../../merkle/merkle.service';
+import { config } from '../../../utils/config';
+
+const chainDataConfig = config.getTyped('chainData');
 
 @Injectable()
 export class TaskService {
@@ -82,8 +85,11 @@ export class TaskService {
     this.taskHandlers.push(parserAddressesTask);
     await parserAddressesTask.registerHandler();
 
+    // Chain data task require separate channel to prevent token bucket consumers overflow
+    const chainDataChannel = await this.amqpService.createChannel();
+    await chainDataChannel.prefetch(chainDataConfig.rps * 2, true);
     const chainDataTaskHandler = new ChainDataTask(
-      channel,
+      chainDataChannel,
       this.providerService,
       this.tokenBucket,
       this.logger,

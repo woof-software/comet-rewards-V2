@@ -26,13 +26,8 @@ const config: DeepPartial<IConfigApp> = {
     },
     maxOpenConnections: 5,
   },
-  processes: {
-    userBasic: {
-      maxInstances: 5,
-    },
-    chainData: {
-      maxInstances: 5,
-    },
+  chainData: {
+    rps: 500, // requests per second
   },
   networks: {
     1: {

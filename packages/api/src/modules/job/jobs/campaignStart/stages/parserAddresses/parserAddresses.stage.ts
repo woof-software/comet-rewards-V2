@@ -83,7 +83,7 @@ export class ParserAddressesStage implements StageHandler {
       this.channel.sendToQueue(
         queues.task.CHAIN_DATA,
         Buffer.from(JSON.stringify(message)),
-        { headers },
+        { headers, deliveryMode: 2 },
       );
     }
 

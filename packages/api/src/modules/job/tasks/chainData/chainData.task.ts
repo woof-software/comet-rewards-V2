@@ -1,4 +1,4 @@
-import { Channel } from 'amqplib';
+import { Channel, Message } from 'amqplib';
 import { DataSource } from 'typeorm';
 import { Logger } from 'winston';
 import { Task } from '../task/task';
@@ -26,7 +26,7 @@ export class ChainDataTask extends Task {
     super(channel, queues.task.CHAIN_DATA, exchanges.result.CHAIN_DATA, logger);
   }
 
-  async handler(msg) {
+  async handler(msg: Message) {
     const headers = <MessageHeaders>msg.properties.headers;
     try {
       const data: ChainDataTaskMessage = JSON.parse(msg.content.toString());
@@ -43,20 +43,18 @@ export class ChainDataTask extends Task {
           break;
         }
         default: {
-          // TODO: finish job with error
-          await this.handleError(
+          return this.handleError(
+            new Error('ChainDataTask: Unknown task action type'),
+            msg,
             headers,
-            'ChainDataTask: Unknown task action type',
           );
-          break;
         }
       }
 
-      this.channel.ack(msg);
+      return this.channel.ack(msg);
     } catch (err) {
       this.logger.error(err.message);
-      // await this.handleError(headers, err.message);
-      this.channel.ack(msg);
+      return this.handleError(err, msg, headers);
     }
   }
 
@@ -67,44 +65,51 @@ export class ChainDataTask extends Task {
     blockNumber: number,
     address: string,
   ) {
-    try {
-      const provider = await this.providerService.getProviderRPC(networkId);
-      const cometRewards = new CometRewardsContract(
-        provider,
-        networkId,
-        market,
-      ).getInstance();
+    const provider = await this.providerService.getProviderRPC(networkId);
+    const cometRewards = new CometRewardsContract(
+      provider,
+      networkId,
+      market,
+    ).getInstance();
 
-      const token = await this.tokenBucketService.consumeToken();
-      this.logger.info(`consumed ${token}`);
-      const result: any = await cometRewards.methods
-        .getRewardOwed(market, address)
-        .call({}, blockNumber);
-      this.logger.info(`received result ${token}`);
+    await this.tokenBucketService.consumeToken();
+    const result: any = await cometRewards.methods
+      .getRewardOwed(market, address)
+      .call({}, blockNumber);
 
-      const message: ChainDataTaskResult = {
-        address,
-        accrued: result.owed.toString(),
-      };
+    const message: ChainDataTaskResult = {
+      address,
+      accrued: result.owed.toString(),
+    };
 
-      this.channel.publish(
-        this.resultExchange,
-        '',
-        Buffer.from(JSON.stringify(message)),
-        { headers },
-      );
-    } catch (err) {
-      this.logger.error(err.message);
-      await this.handleError(headers, err.message);
-    }
+    this.channel.publish(
+      this.resultExchange,
+      '',
+      Buffer.from(JSON.stringify(message)),
+      { headers },
+    );
   }
 
   /**
    * @desc Handle error inside task, send error message to result exchange
    * */
-  async handleError(headers: MessageHeaders, error: string) {
+  async handleError(error: any, msg: Message, headers: MessageHeaders) {
+    console.log();
+    if (error.innerError) {
+      switch (error.innerError.code) {
+        case -32005:
+        case -32001:
+        case -32002: {
+          return this.channel.nack(msg, false, true);
+        }
+        default: {
+          break;
+        }
+      }
+    }
+
     const message = {
-      error,
+      error: error.message,
     };
     this.channel.publish(
       this.resultExchange,
@@ -112,5 +117,6 @@ export class ChainDataTask extends Task {
       Buffer.from(JSON.stringify(message)),
       { headers },
     );
+    return this.channel.ack(msg);
   }
 }

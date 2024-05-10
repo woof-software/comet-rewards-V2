@@ -36,25 +36,6 @@ export class CampaignService {
     this.logger = mainLogger.child({ scope: 'campaign.service' });
   }
 
-  async test() {
-    try {
-      const cometRewards = await this.contractService.getCometRewardsContract(
-        1,
-        '0xc3d688b66703497daa19211eedff47f25384cdc3',
-      );
-      const instance = cometRewards.getInstance();
-      await instance.methods
-        .getRewardOwed(
-          '0xc3d688B66703497DAA19211EEdff47f25384cdc3',
-          '0x00be5cbdb34636ab56efa6f8f06cf1c147dc5cbb',
-        )
-        .call();
-      console.log();
-    } catch (err) {
-      console.log(err);
-    }
-  }
-
   async getCampaigns() {
     return this.dataSource.manager.find(Campaign);
   }

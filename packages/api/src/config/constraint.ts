@@ -28,13 +28,8 @@ export interface IConfigApp {
     maxOpenConnections: number;
     loadExtensions: string;
   };
-  processes: {
-    userBasic: {
-      maxInstances: number;
-    };
-    chainData: {
-      maxInstances: number;
-    };
+  chainData: {
+    rps: number; // requests per second
   };
   networks: {
     [id: number]: {
