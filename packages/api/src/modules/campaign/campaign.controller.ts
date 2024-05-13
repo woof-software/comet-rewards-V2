@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Inject, Param, Post } from '@nestjs/common';
 import { CampaignService } from './campaign.service';
-import { Job } from '../../entities/job.entity';
+import { JobEntity } from '../../entities/job.entity';
 
 @Controller('campaign')
 export class CampaignController {
@@ -25,7 +25,7 @@ export class CampaignController {
     @Body('networkId') networkId: string,
     @Body('market') market: string,
     @Body('blockStart') blockStart: string,
-  ): Promise<Job> {
+  ): Promise<JobEntity> {
     return this.campaignService.startCampaign(
       +networkId,
       market,
@@ -38,7 +38,7 @@ export class CampaignController {
   async endCampaign(
     @Body('campaignId') campaignId: string,
     @Body('blockStart') blockStart: string,
-  ): Promise<Job> {
+  ): Promise<JobEntity> {
     return this.campaignService.endCampaign(+campaignId, +blockStart);
   }
 }

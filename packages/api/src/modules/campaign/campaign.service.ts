@@ -6,12 +6,12 @@ import { WINSTON_LOGGER } from '../winston/keys';
 import { AccountService } from '../account';
 import { MerkleService } from '../merkle/merkle.service';
 import { ProviderService } from '../providers/providerService';
-import { Campaign } from '../../entities';
+import { CampaignEntity } from '../../entities';
 import { ContractService } from '../contracts/contract.service';
 import { JobService, JobType } from '../job';
 import { CampaignEndArgs } from '../job/jobs/campaignStart/types';
-import { Job } from '../../entities/job.entity';
-import { CampaignJob } from '../../entities/campaignJob.entity';
+import { JobEntity } from '../../entities/job.entity';
+import { CampaignJobEntity } from '../../entities/campaignJob.entity';
 
 @Injectable()
 export class CampaignService {
@@ -37,11 +37,11 @@ export class CampaignService {
   }
 
   async getCampaigns() {
-    return this.dataSource.manager.find(Campaign);
+    return this.dataSource.manager.find(CampaignEntity);
   }
 
   async getCampaignMerkle(id: number) {
-    return this.dataSource.manager.findOne(Campaign, {
+    return this.dataSource.manager.findOne(CampaignEntity, {
       where: { id },
       relations: ['participants'],
     });
@@ -55,12 +55,12 @@ export class CampaignService {
     market: string,
     campaignId?: number | null,
     blockNumber?: number,
-  ): Promise<Job> {
+  ): Promise<JobEntity> {
     // eslint-disable-next-line no-param-reassign
     blockNumber =
       blockNumber || (await this.providerService.getBlockNumber(networkId));
 
-    const campaign = new Campaign();
+    const campaign = new CampaignEntity();
     campaign.networkId = networkId;
     campaign.market = market.toLowerCase();
     campaign.blockStart = blockNumber;
@@ -83,7 +83,7 @@ export class CampaignService {
     );
 
     // TODO: avoid accidentally repeating jobs
-    const campaignJob = new CampaignJob();
+    const campaignJob = new CampaignJobEntity();
     campaignJob.campaignId = campaign.id;
     campaignJob.jobId = job.id;
     await this.dataSource.manager.save(campaignJob);
@@ -95,8 +95,11 @@ export class CampaignService {
   /**
    * @desc Register and start 'campaign end' job
    * */
-  async endCampaign(campaignId: number, blockNumber?: number): Promise<Job> {
-    const campaign = await this.dataSource.manager.findOne(Campaign, {
+  async endCampaign(
+    campaignId: number,
+    blockNumber?: number,
+  ): Promise<JobEntity> {
+    const campaign = await this.dataSource.manager.findOne(CampaignEntity, {
       where: { id: campaignId },
     });
     if (!campaign) {
@@ -127,7 +130,7 @@ export class CampaignService {
     );
 
     // TODO: avoid accidentally repeating jobs
-    const campaignJob = new CampaignJob();
+    const campaignJob = new CampaignJobEntity();
     campaignJob.campaignId = campaign.id;
     campaignJob.jobId = job.id;
     await this.dataSource.manager.save(campaignJob);

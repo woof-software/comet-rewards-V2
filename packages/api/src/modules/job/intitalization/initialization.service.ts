@@ -3,7 +3,7 @@ import { Logger } from 'winston';
 import { DataSource, In } from 'typeorm';
 import { WINSTON_LOGGER } from '../../winston/keys';
 import { TaskService } from '../tasks';
-import { Job } from '../../../entities/job.entity';
+import { JobEntity } from '../../../entities/job.entity';
 import { JobStatus } from '../constants';
 import { JobService } from '../job.service';
 
@@ -42,7 +42,7 @@ export class InitializationService implements OnApplicationBootstrap {
   }
 
   async wakeJobs() {
-    const jobs = await this.dataSource.manager.find(Job, {
+    const jobs = await this.dataSource.manager.find(JobEntity, {
       where: {
         status: In([
           JobStatus.REGISTERED,

@@ -17,7 +17,7 @@ import { SubgraphTask } from './subgraph.task';
 import { getDataSourceStubs } from '../../../../utils/stubs.test';
 import { SubgraphService } from '../../../subgraph/subgraph.service';
 import { errors } from './messages';
-import { TaskSubgraph } from '../../../../entities';
+import { TaskSubgraphEntity } from '../../../../entities';
 
 describe('subgraph.task', () => {
   const channel = <Channel>{};
@@ -134,7 +134,7 @@ describe('subgraph.task', () => {
       expect(entityManagerStub.save.args.length).toEqual(3);
       // eslint-disable-next-line
       // @ts-ignore
-      const lastSave: TaskSubgraph = entityManagerStub.save.args[2][0];
+      const lastSave: TaskSubgraphEntity = entityManagerStub.save.args[2][0];
       expect(lastSave.count).toEqual(accounts1.length + accounts2.length);
       expect(lastSave.skip).toEqual(accounts1.length * 2);
       expect(lastSave.finished).toEqual(true);

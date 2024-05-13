@@ -7,7 +7,7 @@ import {
   SubgraphTaskResult,
   SubgraphTaskTypes,
 } from './types';
-import { TaskSubgraph } from '../../../../entities';
+import { TaskSubgraphEntity } from '../../../../entities';
 import { SubgraphService } from '../../../subgraph';
 import { MessageHeaders } from '../../types';
 import { exchanges, queues } from '../../../amqp/constants';
@@ -65,7 +65,7 @@ export class SubgraphTask extends Task {
     blockNumber: number,
     first = 1000,
   ): Promise<void> {
-    let taskHelper = await this.dataSource.manager.findOne(TaskSubgraph, {
+    let taskHelper = await this.dataSource.manager.findOne(TaskSubgraphEntity, {
       where: {
         jobId: headers.jobId,
         type: SubgraphTaskTypes.MARKET_ACCOUNTS,
@@ -77,7 +77,7 @@ export class SubgraphTask extends Task {
     }
 
     if (!taskHelper) {
-      taskHelper = new TaskSubgraph();
+      taskHelper = new TaskSubgraphEntity();
       taskHelper.jobId = headers.jobId;
       taskHelper.type = SubgraphTaskTypes.MARKET_ACCOUNTS;
       taskHelper.skip = 0;

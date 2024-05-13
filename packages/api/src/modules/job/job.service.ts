@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { Logger } from 'winston';
-import { Job } from '../../entities/job.entity';
+import { JobEntity } from '../../entities/job.entity';
 import { JobStatus, JobType } from './constants';
 import { WINSTON_LOGGER } from '../winston/keys';
 import { CampaignStartJob } from './jobs/campaignStart/campaignStart.job';
@@ -32,12 +32,12 @@ export class JobService {
    * @param   key     {string}    Unique job key received from getKey()
    * @param   args    {Object}    Job arguments
    * */
-  async registerJob<T>(type: JobType, args: T): Promise<Job> {
-    const job = new Job();
+  async registerJob<T>(type: JobType, args: T): Promise<JobEntity> {
+    const job = new JobEntity();
     job.type = type;
     job.status = JobStatus.REGISTERED;
     job.args = args;
-    await this.dataSource.manager.save(Job, job);
+    await this.dataSource.manager.save(JobEntity, job);
     return job;
   }
 
@@ -47,7 +47,7 @@ export class JobService {
    * @param id  {Number}    Job id
    * */
   async startJob(id: number): Promise<void> {
-    const job = await this.dataSource.manager.findOne(Job, {
+    const job = await this.dataSource.manager.findOne(JobEntity, {
       where: { id },
     });
 

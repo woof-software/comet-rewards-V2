@@ -1,8 +1,8 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { tables } from '../database/info';
 
-@Entity(tables.TASK_PARSER_ADDRESSES)
-export class TaskParserAddressesEntity {
+@Entity(tables.STAGE_ACCOUNT_ACCRUED)
+export class StageAccountAccruedEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -10,5 +10,5 @@ export class TaskParserAddressesEntity {
   jobId: number;
 
   @Column()
-  count: number;
+  merkleRequested: boolean;
 }

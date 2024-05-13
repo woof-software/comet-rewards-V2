@@ -10,7 +10,7 @@ import { MerkleService } from '../../../merkle/merkle.service';
 import { tables } from '../../../../database/info';
 import { MERKLE_DIR } from '../../../../common/constants';
 import { createDirIfNotExists } from '../../../../utils/utils';
-import { Participant } from '../../../../entities';
+import { ParticipantEntity } from '../../../../entities';
 
 export class MerkleTask extends Task {
   constructor(
@@ -58,7 +58,7 @@ export class MerkleTask extends Task {
       for (let i = 0; i < participants.length; i++) {
         const proof = tree.getProof(i);
         await this.dataSource.manager.update(
-          Participant,
+          ParticipantEntity,
           {
             campaignId: data.campaignId,
             networkId: data.networkId,

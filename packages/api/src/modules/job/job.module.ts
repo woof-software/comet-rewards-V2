@@ -3,13 +3,17 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { JobService } from './job.service';
 import { AmqpModule } from '../amqp';
-import { Job } from '../../entities/job.entity';
-import { Participant } from '../../entities';
-import { TaskParserAddresses } from '../../entities/taskParserAddresses.entity';
+import { JobEntity } from '../../entities/job.entity';
+import { ParticipantEntity } from '../../entities';
+import { TaskParserAddressesEntity } from '../../entities/taskParserAddresses.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Job, Participant, TaskParserAddresses]),
+    TypeOrmModule.forFeature([
+      JobEntity,
+      ParticipantEntity,
+      TaskParserAddressesEntity,
+    ]),
     AmqpModule,
   ],
   providers: [JobService],

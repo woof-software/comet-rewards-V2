@@ -1,4 +1,4 @@
-import { ParserAddress } from '../../../../entities/parserAddress.entity';
+import { ParserAddressEntity } from '../../../../entities/parserAddress.entity';
 
 export interface ParserAddressesTaskMessage {
   networkId: number;
@@ -8,5 +8,5 @@ export interface ParserAddressesTaskMessage {
 
 export interface ParserAddressesTaskResult {
   error?: string;
-  addresses?: ParserAddress[];
+  addresses?: ParserAddressEntity[];
 }

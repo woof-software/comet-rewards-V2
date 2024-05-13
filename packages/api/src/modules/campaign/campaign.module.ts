@@ -7,12 +7,12 @@ import { ContractsModule } from '../contracts/contracts.module';
 import { SubgraphModule } from '../subgraph';
 import { MerkleModule } from '../merkle';
 import { ProvidersModule } from '../providers';
-import { Campaign, Participant } from '../../entities';
+import { CampaignEntity, ParticipantEntity } from '../../entities';
 import { JobModule } from '../job';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Campaign, Participant]),
+    TypeOrmModule.forFeature([CampaignEntity, ParticipantEntity]),
     AccountModule,
     ContractsModule,
     SubgraphModule,

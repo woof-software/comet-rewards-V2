@@ -6,8 +6,8 @@ import { ParserAddressesTaskMessage, ParserAddressesTaskResult } from './types';
 import { SubgraphService } from '../../../subgraph';
 import { MessageHeaders } from '../../types';
 import { exchanges, queues } from '../../../amqp/constants';
-import { ParserAddress } from '../../../../entities/parserAddress.entity';
-import { TaskParserAddresses } from '../../../../entities/taskParserAddresses.entity';
+import { ParserAddressEntity } from '../../../../entities/parserAddress.entity';
+import { TaskParserAddressesEntity } from '../../../../entities/taskParserAddresses.entity';
 
 export class ParserAddressesTask extends Task {
   private readonly dataSource: DataSource;
@@ -33,7 +33,7 @@ export class ParserAddressesTask extends Task {
       );
 
       const message: ParserAddressesTaskResult = {
-        addresses: await this.dataSource.manager.find(ParserAddress, {
+        addresses: await this.dataSource.manager.find(ParserAddressEntity, {
           where: {
             networkId: data.networkId,
             fromBlock: LessThanOrEqual(data.blockNumber),
@@ -42,7 +42,7 @@ export class ParserAddressesTask extends Task {
         }),
       };
 
-      const taskHelper = new TaskParserAddresses();
+      const taskHelper = new TaskParserAddressesEntity();
       taskHelper.jobId = headers.jobId;
       taskHelper.count = message.addresses.length;
       await this.dataSource.manager.save(taskHelper);

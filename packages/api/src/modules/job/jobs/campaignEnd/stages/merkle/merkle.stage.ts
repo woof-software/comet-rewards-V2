@@ -3,11 +3,11 @@ import { Channel, Replies } from 'amqplib';
 import { DataSource } from 'typeorm';
 
 import { MessageHeaders, StageHandler } from '../../../../types';
-import { Job } from '../../../../../../entities/job.entity';
+import { JobEntity } from '../../../../../../entities/job.entity';
 import { mainLogger } from '../../../../../winston';
 import { CompletionMessage } from '../completion/types';
 import { exchanges } from '../../../../../amqp/constants';
-import { Campaign } from '../../../../../../entities';
+import { CampaignEntity } from '../../../../../../entities';
 import { MerkleTaskResult } from '../../../../tasks/merkle/types';
 
 export class MerkleStage implements StageHandler {
@@ -20,7 +20,7 @@ export class MerkleStage implements StageHandler {
   constructor(
     readonly channel: Channel,
     readonly resultExchange: string,
-    readonly job: Job,
+    readonly job: JobEntity,
     private readonly dataSource: DataSource,
   ) {
     this.logger = mainLogger.child({
@@ -60,14 +60,14 @@ export class MerkleStage implements StageHandler {
       return null;
     }
     const result: MerkleTaskResult = JSON.parse(msg.content.toString());
-    const { headers } = msg.properties;
+    const { headers }: { headers: MessageHeaders } = msg.properties;
     if (result.error) {
       this.error(result.error, headers);
       return this.channel.ack(msg);
     }
 
     try {
-      const campaign = await this.dataSource.manager.findOne(Campaign, {
+      const campaign = await this.dataSource.manager.findOne(CampaignEntity, {
         where: {
           id: this.job.args.campaignId,
           networkId: this.job.args.networkId,

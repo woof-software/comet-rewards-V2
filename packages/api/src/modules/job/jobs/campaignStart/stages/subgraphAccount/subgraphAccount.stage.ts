@@ -1,7 +1,7 @@
 import { Logger } from 'winston';
 import { Channel, Replies } from 'amqplib';
 import { MessageHeaders, StageHandler } from '../../../../types';
-import { Job } from '../../../../../../entities/job.entity';
+import { JobEntity } from '../../../../../../entities/job.entity';
 import { mainLogger } from '../../../../../winston';
 import { SubgraphTaskResult } from '../../../../tasks/subgraph/types';
 import { CompletionMessage } from '../completion/types';
@@ -21,7 +21,7 @@ export class SubgraphAccountStage implements StageHandler {
   constructor(
     readonly channel: Channel,
     readonly resultExchange: string,
-    readonly job: Job,
+    readonly job: JobEntity,
   ) {
     this.logger = mainLogger.child({
       scope: `job ${job.id} marketAccounts.stage`,
@@ -62,7 +62,7 @@ export class SubgraphAccountStage implements StageHandler {
       return null;
     }
     const result: SubgraphTaskResult = JSON.parse(msg.content.toString());
-    const { headers } = msg.properties;
+    const { headers }: { headers: MessageHeaders } = msg.properties;
     if (result.error) {
       this.error(result.error, headers);
       return this.channel.ack(msg);

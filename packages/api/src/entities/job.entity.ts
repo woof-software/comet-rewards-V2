@@ -3,7 +3,7 @@ import { JobStatus, JobType } from '../modules/job';
 import { tables } from '../database/info';
 
 @Entity(tables.JOBS)
-export class Job {
+export class JobEntity {
   @PrimaryGeneratedColumn()
   id: number;
 

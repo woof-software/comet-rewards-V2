@@ -3,7 +3,7 @@ import { SubgraphTaskTypes } from '../modules/job/tasks/subgraph/types';
 import { tables } from '../database/info';
 
 @Entity(tables.TASK_SUBGRAPH)
-export class TaskSubgraph {
+export class TaskSubgraphEntity {
   @PrimaryGeneratedColumn()
   id: number;
 

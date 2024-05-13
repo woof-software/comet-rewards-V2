@@ -9,7 +9,7 @@ import { AccruedHelper } from '../helpers/accrued/accrued.helper';
 import { MerkleService } from '../merkle/merkle.service';
 import { getDataSourceStubs } from '../../utils/stubs.test';
 import { mainLogger } from '../winston';
-import { Job } from '../../entities/job.entity';
+import { JobEntity } from '../../entities/job.entity';
 
 describe('campaign.service', () => {
   let campaignService: CampaignService;
@@ -45,7 +45,7 @@ describe('campaign.service', () => {
 
       providerServiceStub.getBlockNumber.returns(Promise.resolve(blockStart));
 
-      const job = new Job();
+      const job = new JobEntity();
       job.id = 11;
       jobServiceStub.registerJob.returns(Promise.resolve(job));
 

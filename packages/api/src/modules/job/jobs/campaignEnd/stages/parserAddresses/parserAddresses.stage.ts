@@ -1,7 +1,7 @@
 import { Logger } from 'winston';
 import { Channel, Replies } from 'amqplib';
 import { MessageHeaders, StageHandler } from '../../../../types';
-import { Job } from '../../../../../../entities/job.entity';
+import { JobEntity } from '../../../../../../entities/job.entity';
 import { mainLogger } from '../../../../../winston';
 import { CompletionMessage } from '../completion/types';
 import {
@@ -21,7 +21,7 @@ export class ParserAddressesStage implements StageHandler {
   constructor(
     readonly channel: Channel,
     readonly resultExchange: string,
-    readonly job: Job,
+    readonly job: JobEntity,
   ) {
     this.logger = mainLogger.child({
       scope: `job ${job.id} parserAddresses.stage`,
@@ -62,7 +62,7 @@ export class ParserAddressesStage implements StageHandler {
     const result: ParserAddressesTaskResult = JSON.parse(
       msg.content.toString(),
     );
-    const { headers } = msg.properties;
+    const { headers }: { headers: MessageHeaders } = msg.properties;
     if (result.error) {
       this.error(result.error, headers);
       return this.channel.ack(msg);

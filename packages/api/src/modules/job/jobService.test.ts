@@ -2,7 +2,7 @@ import { assert, createStubInstance, SinonStubbedInstance } from 'sinon';
 import { Logger } from 'winston';
 import { JobService } from './job.service';
 import { JobStatus, JobType } from './constants';
-import { Job } from '../../entities/job.entity';
+import { JobEntity } from '../../entities/job.entity';
 import { AmqpService } from '../amqp';
 import { getDataSourceStubs } from '../../utils/stubs.test';
 import { errors } from './messages';
@@ -29,14 +29,14 @@ describe('job.service', () => {
         arg2: 2,
       };
 
-      const job = new Job();
+      const job = new JobEntity();
       job.type = type;
       job.args = args;
       job.status = JobStatus.REGISTERED;
 
       const res = await jobService.registerJob(type, args);
 
-      assert.calledOnceWithExactly(entityManagerStub.save, Job, job);
+      assert.calledOnceWithExactly(entityManagerStub.save, JobEntity, job);
       expect(res).toEqual(job);
     });
   });
@@ -56,7 +56,7 @@ describe('job.service', () => {
 
     it('if job completed, throw error', async () => {
       const id = 1;
-      const job = new Job();
+      const job = new JobEntity();
       job.status = JobStatus.COMPLETED;
 
       entityManagerStub.findOne.resolves(job);
@@ -82,7 +82,7 @@ describe('job.service', () => {
     it('start job with incorrect type should update job with error', async () => {
       const id = 1;
       const type = 'incorrect';
-      const job = new Job();
+      const job = new JobEntity();
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       job.type = type;

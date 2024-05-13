@@ -2,13 +2,13 @@ import { Logger } from 'winston';
 import { Channel, Replies } from 'amqplib';
 import { DataSource, IsNull, Not } from 'typeorm';
 import { MessageHeaders, StageHandler } from '../../../../types';
-import { Job } from '../../../../../../entities/job.entity';
+import { JobEntity } from '../../../../../../entities/job.entity';
 import { mainLogger } from '../../../../../winston';
 import { CompletionMessage } from '../completion/types';
 import { ChainDataTaskResult } from '../../../../tasks/chainData/types';
 import { exchanges, queues } from '../../../../../amqp/constants';
-import { Participant } from '../../../../../../entities';
-import { TaskParserAddresses } from '../../../../../../entities/taskParserAddresses.entity';
+import { ParticipantEntity } from '../../../../../../entities';
+import { TaskParserAddressesEntity } from '../../../../../../entities/taskParserAddresses.entity';
 import { MerkleTaskMessage } from '../../../../tasks/merkle/types';
 
 export class AccountAccruedStage implements StageHandler {
@@ -21,7 +21,7 @@ export class AccountAccruedStage implements StageHandler {
   constructor(
     readonly channel: Channel,
     readonly resultExchange: string,
-    readonly job: Job,
+    readonly job: JobEntity,
     private readonly dataSource: DataSource,
   ) {
     this.logger = mainLogger.child({
@@ -61,32 +61,32 @@ export class AccountAccruedStage implements StageHandler {
       return null;
     }
     const result: ChainDataTaskResult = JSON.parse(msg.content.toString());
-    const { headers } = msg.properties;
+    const { headers }: { headers: MessageHeaders } = msg.properties;
     if (result.error) {
       this.error(result.error, headers);
       return this.channel.ack(msg);
     }
 
     try {
-      const participant = new Participant();
+      const participant = new ParticipantEntity();
       participant.networkId = this.job.args.networkId;
       participant.campaignId = this.job.args.campaignId;
       participant.address = result.address;
       participant.accruedEnd = result.accrued;
 
-      await this.dataSource.manager.upsert(Participant, participant, [
+      await this.dataSource.manager.upsert(ParticipantEntity, participant, [
         'campaignId',
         'networkId',
         'address',
       ]);
       const taskHelper = await this.dataSource.manager.findOne(
-        TaskParserAddresses,
+        TaskParserAddressesEntity,
         {
           where: { jobId: this.job.id },
         },
       );
       const participantCount = await this.dataSource.manager.count(
-        Participant,
+        ParticipantEntity,
         {
           where: {
             networkId: this.job.args.networkId,

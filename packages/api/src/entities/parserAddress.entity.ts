@@ -8,7 +8,7 @@ import {
 import { tables } from '../database/info';
 
 @Entity(tables.PARSER_ADDRESSES)
-export class ParserAddress {
+export class ParserAddressEntity {
   @PrimaryGeneratedColumn()
   id: number;
 

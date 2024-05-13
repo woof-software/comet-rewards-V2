@@ -3,7 +3,7 @@ import { Channel, Replies } from 'amqplib';
 import { DataSource } from 'typeorm';
 import { StageHandler } from '../../../../types';
 import { JobStatus } from '../../../../constants';
-import { Job } from '../../../../../../entities/job.entity';
+import { JobEntity } from '../../../../../../entities/job.entity';
 import { mainLogger } from '../../../../../winston';
 import { CompletionMessage } from './types';
 
@@ -17,7 +17,7 @@ export class CompletionStage implements StageHandler {
   constructor(
     readonly channel: Channel,
     readonly completionExchange: string,
-    readonly job: Job,
+    readonly job: JobEntity,
     readonly stageHandlers: StageHandler[],
     private readonly dataSource: DataSource,
   ) {

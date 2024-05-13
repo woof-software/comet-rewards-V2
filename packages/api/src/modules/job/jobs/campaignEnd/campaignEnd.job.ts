@@ -2,7 +2,7 @@ import { Logger } from 'winston';
 import { Channel } from 'amqplib';
 import { DataSource } from 'typeorm';
 
-import { Job } from '../../../../entities/job.entity';
+import { JobEntity } from '../../../../entities/job.entity';
 import { JobManager, MessageHeaders, StageHandler } from '../../types';
 import { JobStatus } from '../../constants';
 import { CompletionStage } from './stages/completion/completion.stage';
@@ -15,7 +15,7 @@ import { MerkleStage } from './stages/merkle/merkle.stage';
 export class CampaignEndJob implements JobManager {
   private readonly logger: Logger;
 
-  job: Job;
+  job: JobEntity;
 
   stageHandlers: StageHandler[] = [];
 
@@ -25,7 +25,7 @@ export class CampaignEndJob implements JobManager {
     private readonly channel: Channel,
     private readonly dataSource: DataSource,
     mainLogger: Logger,
-    job: Job,
+    job: JobEntity,
   ) {
     this.logger = mainLogger.child({
       scope: `job ${job.id} campaignStart.manager`,
@@ -33,7 +33,7 @@ export class CampaignEndJob implements JobManager {
     this.job = job;
   }
 
-  async startJob(): Promise<Job> {
+  async startJob(): Promise<JobEntity> {
     await this.registerCompletionHandler();
 
     if (this.job.status !== JobStatus.FINISHING) {

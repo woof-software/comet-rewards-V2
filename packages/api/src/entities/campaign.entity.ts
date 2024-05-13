@@ -1,9 +1,9 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { tables } from '../database/info';
-import { Participant } from './participant.entity';
+import { ParticipantEntity } from './participant.entity';
 
 @Entity(tables.CAMPAIGNS)
-export class Campaign {
+export class CampaignEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -31,6 +31,6 @@ export class Campaign {
   @Column()
   updatedAt: Date;
 
-  @OneToMany(() => Participant, (participant) => participant.campaign)
-  participants: Participant[];
+  @OneToMany(() => ParticipantEntity, (participant) => participant.campaign)
+  participants: ParticipantEntity[];
 }

@@ -9,4 +9,5 @@ export const tables = {
   PARSER_ADDRESSES: 'parser_addresses',
   TASK_SUBGRAPH: 'task_subgraph',
   TASK_PARSER_ADDRESSES: 'task_parser_addresses',
+  STAGE_ACCOUNT_ACCRUED: 'stage_account_accrued',
 };

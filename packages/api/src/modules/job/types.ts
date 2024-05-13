@@ -1,5 +1,5 @@
 import { Channel } from 'amqplib';
-import { Job } from '../../entities/job.entity';
+import { JobEntity } from '../../entities/job.entity';
 
 export interface Handler {
   channel: Channel;
@@ -10,7 +10,7 @@ export interface Handler {
 }
 
 export interface StageHandler extends Handler {
-  job: Job;
+  job: JobEntity;
   // next<T>(data: T);
 }
 
@@ -18,7 +18,7 @@ export interface JobManager {
   stageHandlers: StageHandler[];
   completionHandler: Handler;
 
-  startJob(): Promise<Job>;
+  startJob(): Promise<JobEntity>;
 }
 
 export interface MessageHeaders {
